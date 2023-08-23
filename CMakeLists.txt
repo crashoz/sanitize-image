@@ -9,6 +9,7 @@ project(sanitize-image VERSION 1.0
     DESCRIPTION "Image sanitizer"
     LANGUAGES C)
 
+# set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 add_subdirectory(src)
