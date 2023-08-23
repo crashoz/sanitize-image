@@ -185,35 +185,21 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
         {
             for (col = 0; col < image->width; col++)
             {
-                image_buffer12[row][col * 3] =
-                    (col * (MAXJ12SAMPLE + 1) / image->width) % (MAXJ12SAMPLE + 1);
-                image_buffer12[row][col * 3 + 1] =
-                    (row * (MAXJ12SAMPLE + 1) / image->height) % (MAXJ12SAMPLE + 1);
-                image_buffer12[row][col * 3 + 2] =
-                    (row * (MAXJ12SAMPLE + 1) / image->height +
-                     col * (MAXJ12SAMPLE + 1) / image->width) %
-                    (MAXJ12SAMPLE + 1);
+                image_buffer[row][col * 3] = image->data[row * image->width * 3 + col * 3];
+                image_buffer[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
+                image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
             }
         }
     }
     else
     {
+        // TODO do not duplicate image buffer (=image->data)
         image_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, image->height);
 
         for (row = 0; row < image->height; row++)
         {
             for (col = 0; col < image->width; col++)
             {
-                /*
-                image_buffer[row][col * 3] =
-                    (col * (MAXJSAMPLE + 1) / image->width) % (MAXJSAMPLE + 1);
-                image_buffer[row][col * 3 + 1] =
-                    (row * (MAXJSAMPLE + 1) / image->height) % (MAXJSAMPLE + 1);
-                image_buffer[row][col * 3 + 2] =
-                    (row * (MAXJSAMPLE + 1) / image->height + col * (MAXJSAMPLE + 1) / image->width) %
-                    (MAXJSAMPLE + 1);
-                */
-
                 image_buffer[row][col * 3] = image->data[row * image->width * 3 + col * 3];
                 image_buffer[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
                 image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];

@@ -13,6 +13,7 @@ typedef struct
 void hello_sanitizer();
 
 image_t *png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size);
+image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size);
 
 int png_encode(char *path, image_t *image, enum spng_color_type color_type, int bit_depth);
 int jpeg_encode(char *path, image_t *image, int quality, int data_precision);

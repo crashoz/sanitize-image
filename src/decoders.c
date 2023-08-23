@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <spng.h>
 #include <jpeglib.h>
@@ -243,4 +244,168 @@ error:
     free(image);
 
     return NULL;
+}
+
+image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size)
+{
+    // TODO Force image output format
+    // TODO Handle errors and malicious input
+
+    struct jpeg_decompress_struct internal_cinfo;
+    struct jpeg_decompress_struct *cinfo = &internal_cinfo;
+    struct jpeg_error_mgr jerr;
+    FILE *infile;                 /* source file */
+    JSAMPARRAY buffer = NULL;     /* Output row buffer */
+    J12SAMPARRAY buffer12 = NULL; /* 12-bit output row buffer */
+    int col;
+    int row_stride; /* physical row width in output buffer */
+
+    image_t *image = malloc(sizeof(image));
+
+    /* In this example we want to open the input and output files before doing
+     * anything else, so that the setjmp() error recovery below can assume the
+     * files are open.
+     *
+     * VERY IMPORTANT: use "b" option to fopen() if you are on a machine that
+     * requires it in order to read/write binary files.
+     */
+
+    if ((infile = fopen(path, "rb")) == NULL)
+    {
+        fprintf(stderr, "can't open %s\n", path);
+        return 0;
+    }
+
+    cinfo->err = jpeg_std_error(&jerr);
+
+    /* Step 1: allocate and initialize JPEG decompression object */
+
+    /* Now we can initialize the JPEG decompression object. */
+    jpeg_create_decompress(cinfo);
+
+    /* Step 2: specify data source (eg, a file) */
+
+    jpeg_stdio_src(cinfo, infile);
+
+    /* Step 3: read file parameters with jpeg_read_header() */
+
+    (void)jpeg_read_header(cinfo, TRUE);
+    /* We can ignore the return value from jpeg_read_header since
+     *   (a) suspension is not possible with the stdio data source, and
+     *   (b) we passed TRUE to reject a tables-only JPEG file as an error.
+     * See libjpeg.txt for more info.
+     */
+
+    //! limits against malicious input
+    if (cinfo->image_width > max_width || cinfo->image_height > max_height)
+    {
+        // TODO handle image dims are too big
+        return NULL;
+    }
+
+    if ((cinfo->image_width * cinfo->image_height * cinfo->num_components * cinfo->data_precision) / 8 > max_size)
+    {
+        // TODO handle image is too big
+        return NULL;
+    }
+
+    image->width = cinfo->image_width;
+    image->height = cinfo->image_height;
+
+    /* Step 4: set parameters for decompression */
+
+    /* In this example, we don't need to change any of the defaults set by
+     * jpeg_read_header(), so we do nothing here.
+     */
+
+    /* Step 5: Start decompressor */
+
+    (void)jpeg_start_decompress(cinfo);
+    /* We can ignore the return value since suspension is not possible
+     * with the stdio data source.
+     */
+
+    /* We may need to do some setup of our own at this point before reading
+     * the data.  After jpeg_start_decompress() we have the correct scaled
+     * output image dimensions available, as well as the output colormap
+     * if we asked for color quantization.
+     * In this example, we need to make an output work buffer of the right size.
+     */
+    /* Samples per row in output buffer */
+    row_stride = cinfo->output_width * cinfo->output_components;
+    /* Make a one-row-high sample array that will go away when done with image */
+    if (cinfo->data_precision == 12)
+    {
+        buffer12 = (J12SAMPARRAY)(*cinfo->mem->alloc_sarray)((j_common_ptr)cinfo, JPOOL_IMAGE, row_stride, 1);
+    }
+    else
+    {
+        buffer = (*cinfo->mem->alloc_sarray)((j_common_ptr)cinfo, JPOOL_IMAGE, row_stride, 1);
+        image->data = malloc(image->height * row_stride);
+    }
+
+    /* Step 6: while (scan lines remain to be read) */
+    /*           jpeg_read_scanlines(...); */
+
+    /* Here we use the library's state variable cinfo->output_scanline as the
+     * loop counter, so that we don't have to keep track ourselves.
+     */
+    if (cinfo->data_precision == 12)
+    {
+        while (cinfo->output_scanline < cinfo->output_height)
+        {
+            /* jpeg12_read_scanlines expects an array of pointers to scanlines.
+             * Here the array is only one element long, but you could ask for
+             * more than one scanline at a time if that's more convenient.
+             */
+            (void)jpeg12_read_scanlines(cinfo, buffer12, 1);
+            /* Swap MSB and LSB in each sample */
+            for (col = 0; col < row_stride; col++)
+                buffer12[0][col] = ((buffer12[0][col] & 0xFF) << 8) |
+                                   ((buffer12[0][col] >> 8) & 0xFF);
+
+            // TODO Handle 12-bit images
+            // fwrite(buffer12[0], 1, row_stride * sizeof(J12SAMPLE), outfile);
+        }
+    }
+    else
+    {
+        while (cinfo->output_scanline < cinfo->output_height)
+        {
+            /* jpeg_read_scanlines expects an array of pointers to scanlines.
+             * Here the array is only one element long, but you could ask for
+             * more than one scanline at a time if that's more convenient.
+             */
+            (void)jpeg_read_scanlines(cinfo, buffer, 1);
+            memcpy(&(image->data[cinfo->output_scanline * row_stride]), buffer[0], row_stride);
+            // fwrite(buffer[0], 1, row_stride, outfile);
+        }
+    }
+
+    /* Step 7: Finish decompression */
+
+    (void)jpeg_finish_decompress(cinfo);
+    /* We can ignore the return value since suspension is not possible
+     * with the stdio data source.
+     */
+
+    /* Step 8: Release JPEG decompression object */
+
+    /* This is an important step since it will release a good deal of memory. */
+    jpeg_destroy_decompress(cinfo);
+
+    /* After finish_decompress, we can close the input and output files.
+     * Here we postpone it until after no more JPEG errors are possible,
+     * so as to simplify the setjmp error logic above.  (Actually, I don't
+     * think that jpeg_destroy can do an error exit, but why assume anything...)
+     */
+    fclose(infile);
+    // fclose(outfile);
+
+    /* At this point you may want to check to see whether any corrupt-data
+     * warnings occurred (test whether jerr.pub.num_warnings is nonzero).
+     */
+
+    /* And we're done! */
+    return image;
 }
