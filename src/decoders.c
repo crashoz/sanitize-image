@@ -1,7 +1,9 @@
-#include <spng.h>
-
 #include <inttypes.h>
 #include <stdio.h>
+
+#include <spng.h>
+#include <jpeglib.h>
+#include <jerror.h>
 
 #include <sanitize-image.h>
 

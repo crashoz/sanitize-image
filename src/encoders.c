@@ -204,6 +204,7 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
         {
             for (col = 0; col < image->width; col++)
             {
+                /*
                 image_buffer[row][col * 3] =
                     (col * (MAXJSAMPLE + 1) / image->width) % (MAXJSAMPLE + 1);
                 image_buffer[row][col * 3 + 1] =
@@ -211,6 +212,11 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
                 image_buffer[row][col * 3 + 2] =
                     (row * (MAXJSAMPLE + 1) / image->height + col * (MAXJSAMPLE + 1) / image->width) %
                     (MAXJSAMPLE + 1);
+                */
+
+                image_buffer[row][col * 3] = image->data[row * image->width * 3 + col * 3];
+                image_buffer[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
+                image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
             }
         }
     }
