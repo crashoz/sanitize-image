@@ -85,7 +85,7 @@ encode_error:
     return ret;
 }
 
-int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
+int jpeg_encode(char *path, image_t *image, int quality)
 {
     /* This struct contains the JPEG compression parameters and pointers to
      * working space (which is allocated as needed by the JPEG library).
@@ -108,13 +108,9 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
     JSAMPARRAY image_buffer = NULL;
     /* Points to large array of R,G,B-order data */
     JSAMPROW row_pointer[1]; /* pointer to JSAMPLE row[s] */
-
-    J12SAMPARRAY image_buffer12 = NULL;
-    /* Points to large array of R,G,B-order 12-bit
-       data */
-    J12SAMPROW row_pointer12[1]; /* pointer to J12SAMPLE row[s] */
-    int row_stride;              /* physical row width in image buffer */
+    int row_stride;          /* physical row width in image buffer */
     int row, col;
+    int data_precision = 8;
 
     /* Step 1: allocate and initialize JPEG compression object */
 
@@ -171,43 +167,26 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
     /* Step 5: allocate and initialize image buffer */
 
     row_stride = image->width * 3; /* J[12]SAMPLEs per row in image_buffer */
-    /* Make a sample array that will go away when done with image.  Note that,
-     * for the purposes of this example, we could also create a one-row-high
-     * sample array and initialize it for each successive scanline written in the
-     * scanline loop below.
-     */
-    if (cinfo.data_precision == 12)
-    {
-        image_buffer12 = (J12SAMPARRAY)(*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, image->height);
+                                   /* Make a sample array that will go away when done with image.  Note that,
+                                    * for the purposes of this example, we could also create a one-row-high
+                                    * sample array and initialize it for each successive scanline written in the
+                                    * scanline loop below.
+                                    */
 
-        /* Initialize image buffer with a repeating pattern */
-        for (row = 0; row < image->height; row++)
+    // ? We can skip this and write directly from image to output file (see below)
+    /*
+    image_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, image->height);
+
+    for (row = 0; row < image->height; row++)
+    {
+        for (col = 0; col < image->width; col++)
         {
-            for (col = 0; col < image->width; col++)
-            {
-                image_buffer12[row][col * 3] = image->data[row * image->width * 3 + col * 3];
-                image_buffer12[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
-                image_buffer12[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
-            }
+            image_buffer[row][col * 3] = image->data[row * image->width * 3 + col * 3];
+            image_buffer[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
+            image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
         }
     }
-    else
-    {
-        // ? We can skip this and write directly from image to output file (see below)
-        /*
-        image_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, image->height);
-
-        for (row = 0; row < image->height; row++)
-        {
-            for (col = 0; col < image->width; col++)
-            {
-                image_buffer[row][col * 3] = image->data[row * image->width * 3 + col * 3];
-                image_buffer[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
-                image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
-            }
-        }
-        */
-    }
+    */
 
     /* Step 6: while (scan lines remain to be written) */
     /*           jpeg_write_scanlines(...); */
@@ -217,32 +196,18 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
      * To keep things simple, we pass one scanline per call; you can pass
      * more if you wish, though.
      */
-    if (cinfo.data_precision == 12)
-    {
-        while (cinfo.next_scanline < cinfo.image_height)
-        {
-            /* jpeg12_write_scanlines expects an array of pointers to scanlines.
-             * Here the array is only one element long, but you could pass
-             * more than one scanline at a time if that's more convenient.
-             */
-            row_pointer12[0] = image_buffer12[cinfo.next_scanline];
-            (void)jpeg12_write_scanlines(&cinfo, row_pointer12, 1);
-        }
-    }
-    else
-    {
-        while (cinfo.next_scanline < cinfo.image_height)
-        {
-            /* jpeg_write_scanlines expects an array of pointers to scanlines.
-             * Here the array is only one element long, but you could pass
-             * more than one scanline at a time if that's more convenient.
-             */
 
-            // row_pointer[0] = image_buffer[cinfo.next_scanline];
-            row_pointer[0] = &image->data[cinfo.next_scanline * row_stride];
+    while (cinfo.next_scanline < cinfo.image_height)
+    {
+        /* jpeg_write_scanlines expects an array of pointers to scanlines.
+         * Here the array is only one element long, but you could pass
+         * more than one scanline at a time if that's more convenient.
+         */
 
-            (void)jpeg_write_scanlines(&cinfo, row_pointer, 1);
-        }
+        // row_pointer[0] = image_buffer[cinfo.next_scanline];
+        row_pointer[0] = &image->data[cinfo.next_scanline * row_stride];
+
+        (void)jpeg_write_scanlines(&cinfo, row_pointer, 1);
     }
 
     /* Step 7: Finish compression */

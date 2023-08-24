@@ -27,12 +27,19 @@ const char *color_type_str(enum spng_color_type color_type)
     }
 }
 
-image_t *png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size)
+int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
+    int errorcode;
     FILE *png;
     int ret = 0;
     spng_ctx *ctx = NULL;
+
     image_t *image = malloc(sizeof(image));
+    if (image == NULL)
+    {
+        errorcode = 1;
+        goto error;
+    }
 
     png = fopen(path, "rb");
 
@@ -235,7 +242,9 @@ no_text:
 
     */
 
-    return image;
+    *out_image = image;
+
+    return errorcode;
 
 error:
 
@@ -243,19 +252,17 @@ error:
     free(image->data);
     free(image);
 
-    return NULL;
+    return errorcode;
 }
 
-image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size)
+int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
-    // TODO Force image output format
     // TODO Handle errors and malicious input
 
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
-    FILE *infile;                 /* source file */
-    JSAMPARRAY buffer = NULL;     /* Output row buffer */
-    J12SAMPARRAY buffer12 = NULL; /* 12-bit output row buffer */
+    FILE *infile;             /* source file */
+    JSAMPARRAY buffer = NULL; /* Output row buffer */
     int col;
     int row_stride; /* physical row width in output buffer */
 
@@ -299,13 +306,13 @@ image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t
     if (cinfo.image_width > max_width || cinfo.image_height > max_height)
     {
         // TODO handle image dims are too big
-        return NULL;
+        return 1;
     }
 
     if ((cinfo.image_width * cinfo.image_height * cinfo.num_components * cinfo.data_precision) / 8 > max_size)
     {
         // TODO handle image is too big
-        return NULL;
+        return 1;
     }
 
     image->width = cinfo.image_width;
@@ -333,7 +340,8 @@ image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t
     /* Make a one-row-high sample array that will go away when done with image */
     if (cinfo.data_precision == 12)
     {
-        buffer12 = (J12SAMPARRAY)(*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
+        // TODO error: does not support 12 bit data precision
+        return 1;
     }
     else
     {
@@ -347,36 +355,15 @@ image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t
     /* Here we use the library's state variable cinfo.output_scanline as the
      * loop counter, so that we don't have to keep track ourselves.
      */
-    if (cinfo.data_precision == 12)
+    while (cinfo.output_scanline < cinfo.output_height)
     {
-        while (cinfo.output_scanline < cinfo.output_height)
-        {
-            /* jpeg12_read_scanlines expects an array of pointers to scanlines.
-             * Here the array is only one element long, but you could ask for
-             * more than one scanline at a time if that's more convenient.
-             */
-            (void)jpeg12_read_scanlines(&cinfo, buffer12, 1);
-            /* Swap MSB and LSB in each sample */
-            for (col = 0; col < row_stride; col++)
-                buffer12[0][col] = ((buffer12[0][col] & 0xFF) << 8) |
-                                   ((buffer12[0][col] >> 8) & 0xFF);
-
-            // TODO Handle 12-bit images
-            // fwrite(buffer12[0], 1, row_stride * sizeof(J12SAMPLE), outfile);
-        }
-    }
-    else
-    {
-        while (cinfo.output_scanline < cinfo.output_height)
-        {
-            /* jpeg_read_scanlines expects an array of pointers to scanlines.
-             * Here the array is only one element long, but you could ask for
-             * more than one scanline at a time if that's more convenient.
-             */
-            (void)jpeg_read_scanlines(&cinfo, buffer, 1);
-            memcpy(&(image->data[cinfo.output_scanline * row_stride]), buffer[0], row_stride);
-            // fwrite(buffer[0], 1, row_stride, outfile);
-        }
+        /* jpeg_read_scanlines expects an array of pointers to scanlines.
+         * Here the array is only one element long, but you could ask for
+         * more than one scanline at a time if that's more convenient.
+         */
+        (void)jpeg_read_scanlines(&cinfo, buffer, 1);
+        memcpy(&(image->data[cinfo.output_scanline * row_stride]), buffer[0], row_stride);
+        // fwrite(buffer[0], 1, row_stride, outfile);
     }
 
     /* Step 7: Finish decompression */
@@ -404,5 +391,6 @@ image_t *jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t
      */
 
     /* And we're done! */
-    return image;
+    *out_image = image;
+    return 0;
 }
