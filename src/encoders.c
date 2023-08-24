@@ -9,6 +9,7 @@
 
 int png_encode(char *path, image_t *image, enum spng_color_type color_type, int bit_depth)
 {
+    int errorcode = 0;
     int fmt;
     int ret = 0;
     spng_ctx *ctx = NULL;
@@ -20,18 +21,30 @@ int png_encode(char *path, image_t *image, enum spng_color_type color_type, int 
     if (png == NULL)
     {
         printf("error opening output file %s\n", path);
-        goto encode_error;
+        errorcode = ERROR_OPENING_FILE;
+        goto error;
     }
 
     /* Creating an encoder context requires a flag */
     ctx = spng_ctx_new(SPNG_CTX_ENCODER);
+
+    if (ctx == NULL)
+    {
+        printf("spng_ctx_new() failed\n");
+        errorcode = ERROR_INTERNAL;
+        goto error;
+    }
 
     /* Encode to internal buffer managed by the library */
     // spng_set_option(ctx, SPNG_ENCODE_TO_BUFFER, 1);
     // TODO set compression and options
 
     /* Alternatively you can set an output FILE* or stream with spng_set_png_file() or spng_set_png_stream() */
-    spng_set_png_file(ctx, png);
+    if (spng_set_png_file(ctx, png) != 0)
+    {
+        errorcode = ERROR_SET_DEST;
+        goto error;
+    }
 
     /* Set image properties, this determines the destination image format */
     ihdr.width = image->width;
@@ -42,10 +55,11 @@ int png_encode(char *path, image_t *image, enum spng_color_type color_type, int 
     /* Valid color type, bit depth combinations: https://www.w3.org/TR/2003/REC-PNG-20031110/#table111 */
 
     ret = spng_set_ihdr(ctx, &ihdr);
-    if (ret)
+    if (ret != 0)
     {
         printf("spng_set_ihdr() error: %s\n", spng_strerror(ret));
-        goto encode_error;
+        errorcode = ERROR_INTERNAL;
+        goto error;
     }
 
     /* When encoding fmt is the source format */
@@ -55,10 +69,11 @@ int png_encode(char *path, image_t *image, enum spng_color_type color_type, int 
     /* SPNG_ENCODE_FINALIZE will finalize the PNG with the end-of-file marker */
     ret = spng_encode_image(ctx, image->data, length, fmt, SPNG_ENCODE_FINALIZE);
 
-    if (ret)
+    if (ret != 0)
     {
         printf("spng_encode_image() error: %s\n", spng_strerror(ret));
-        goto encode_error;
+        errorcode = ERROR_ENCODE;
+        goto error;
     }
 
     /*
@@ -78,11 +93,11 @@ int png_encode(char *path, image_t *image, enum spng_color_type color_type, int 
     free(png_buf);
     */
 
-encode_error:
+error:
 
     spng_ctx_free(ctx);
 
-    return ret;
+    return errorcode;
 }
 
 int jpeg_encode(char *path, image_t *image, int quality)

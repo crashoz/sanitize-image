@@ -29,23 +29,27 @@ const char *color_type_str(enum spng_color_type color_type)
 
 int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
-    int errorcode;
+    int errorcode = 0;
     FILE *png;
     int ret = 0;
     spng_ctx *ctx = NULL;
 
+    *out_image = NULL;
+
     image_t *image = malloc(sizeof(image));
     if (image == NULL)
     {
-        errorcode = 1;
+        errorcode = ERROR_OUT_OF_MEMORY;
         goto error;
     }
+    image->data = NULL;
 
     png = fopen(path, "rb");
 
     if (png == NULL)
     {
         printf("error opening input file %s\n", path);
+        errorcode = ERROR_OPENING_FILE;
         goto error;
     }
 
@@ -54,36 +58,56 @@ int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_s
     if (ctx == NULL)
     {
         printf("spng_ctx_new() failed\n");
+        errorcode = ERROR_INTERNAL;
         goto error;
     }
 
     /* Ignore and don't calculate chunk CRC's */
-    spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE);
+    if (spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE) != 0)
+    {
+        errorcode = ERROR_INTERNAL;
+        goto error;
+    }
 
     //! limits against malicious input
-    spng_set_image_limits(ctx, max_width, max_height);
+    if (spng_set_image_limits(ctx, max_width, max_height) != 0)
+    {
+        errorcode = ERROR_INTERNAL;
+        goto error;
+    }
 
     /* Set memory usage limits for storing standard and unknown chunks,
        this is important when reading untrusted files! */
     size_t limit = 1024 * 1024 * 64;
-    spng_set_chunk_limits(ctx, limit, limit);
+    if (spng_set_chunk_limits(ctx, limit, limit) != 0)
+    {
+        errorcode = ERROR_INTERNAL;
+        goto error;
+    };
 
     /* Set source PNG */
-    spng_set_png_file(ctx, png); /* or _buffer(), _stream() */
+    if (spng_set_png_file(ctx, png) != 0)
+    {
+        errorcode = ERROR_SET_SOURCE;
+        goto error;
+    }; /* or _buffer(), _stream() */
 
     struct spng_ihdr ihdr;
     ret = spng_get_ihdr(ctx, &ihdr);
 
-    if (ret)
+    if (ret != 0)
     {
         printf("spng_get_ihdr() error: %s\n", spng_strerror(ret));
+        errorcode = ERROR_BAD_HEADER;
         goto error;
     }
 
-    const char *color_name = color_type_str(ihdr.color_type);
-
     image->width = ihdr.width;
     image->height = ihdr.height;
+
+    /*
+    ? display png header info
+    const char *color_name = color_type_str(ihdr.color_type);
 
     printf("width: %u\n"
            "height: %u\n"
@@ -96,91 +120,97 @@ int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_s
            "interlace method: %u\n",
            ihdr.compression_method, ihdr.filter_method, ihdr.interlace_method);
 
+    */
+
+    /*
+    ? Handling palette
     struct spng_plte plte = {0};
     ret = spng_get_plte(ctx, &plte);
 
-    if (ret && ret != SPNG_ECHUNKAVAIL)
+    if (ret != 0 && ret != SPNG_ECHUNKAVAIL)
     {
         printf("spng_get_plte() error: %s\n", spng_strerror(ret));
+        errorcode = ERROR_BAD_HEADER;
         goto error;
     }
 
-    if (!ret)
+    if (ret == 0)
+    {
         printf("palette entries: %u\n", plte.n_entries);
+    }
+    */
 
     size_t image_size, image_width;
-
-    /* Output format, does not depend on source PNG format except for
-       SPNG_FMT_PNG, which is the PNG's format in host-endian or
-       big-endian for SPNG_FMT_RAW.
-       Note that for these two formats <8-bit images are left byte-packed */
-    int fmt = SPNG_FMT_PNG;
-
-    /* With SPNG_FMT_PNG indexed color images are output as palette indices,
-       pick another format to expand them. */
-    if (ihdr.color_type == SPNG_COLOR_TYPE_INDEXED)
-        fmt = SPNG_FMT_RGB8;
+    int fmt = SPNG_FMT_RGB8;
 
     ret = spng_decoded_image_size(ctx, fmt, &image_size);
 
-    if (ret)
+    if (ret != 0)
+    {
+        errorcode = ERROR_IMAGE_SIZE;
         goto error;
+    }
 
     if (image_size > max_size)
     {
         printf("image is too big: %d\n", image_size);
+        errorcode = ERROR_IMAGE_SIZE;
         goto error;
     }
-
-    printf("image size: %u\n", image_size);
 
     image->data = malloc(image_size);
 
     if (image->data == NULL)
+    {
+        errorcode = ERROR_OUT_OF_MEMORY;
         goto error;
+    }
 
     /* Decode the image in one go */
-    /* ret = spng_decode_image(ctx, image, image_size, SPNG_FMT_RGBA8, 0);
+    ret = spng_decode_image(ctx, image->data, image_size, fmt, 0);
 
-    if(ret)
+    if (ret != 0)
     {
         printf("spng_decode_image() error: %s\n", spng_strerror(ret));
+        errorcode = ERROR_DECODE;
         goto error;
-    }*/
+    }
 
     /* Alternatively you can decode the image progressively,
        this requires an initialization step. */
-    ret = spng_decode_image(ctx, NULL, 0, fmt, SPNG_DECODE_PROGRESSIVE);
+    /*
+        ret = spng_decode_image(ctx, NULL, 0, fmt, SPNG_DECODE_PROGRESSIVE);
 
-    if (ret)
-    {
-        printf("progressive spng_decode_image() error: %s\n", spng_strerror(ret));
-        goto error;
-    }
-
-    /* ihdr.height will always be non-zero if spng_get_ihdr() succeeds */
-    image_width = image_size / ihdr.height;
-
-    struct spng_row_info row_info = {0};
-
-    do
-    {
-        ret = spng_get_row_info(ctx, &row_info);
         if (ret)
-            break;
+        {
+            printf("progressive spng_decode_image() error: %s\n", spng_strerror(ret));
+            goto error;
+        }
 
-        ret = spng_decode_row(ctx, image->data + row_info.row_num * image_width, image_width);
-    } while (!ret);
+        // ihdr.height will always be non-zero if spng_get_ihdr() succeeds
+        image_width = image_size / ihdr.height;
 
-    if (ret != SPNG_EOI)
-    {
-        printf("progressive decode error: %s\n", spng_strerror(ret));
+        struct spng_row_info row_info = {0};
 
-        if (ihdr.interlace_method)
-            printf("last pass: %d, scanline: %u\n", row_info.pass, row_info.scanline_idx);
-        else
-            printf("last row: %u\n", row_info.row_num);
-    }
+        do
+        {
+            ret = spng_get_row_info(ctx, &row_info);
+            if (ret)
+                break;
+
+            ret = spng_decode_row(ctx, image->data + row_info.row_num * image_width, image_width);
+        } while (!ret);
+
+        if (ret != SPNG_EOI)
+        {
+            printf("progressive decode error: %s\n", spng_strerror(ret));
+
+            if (ihdr.interlace_method)
+                printf("last pass: %d, scanline: %u\n", row_info.pass, row_info.scanline_idx);
+            else
+                printf("last row: %u\n", row_info.row_num);
+        }
+        */
 
     /*
     ? parse text contained in the png data
@@ -243,13 +273,16 @@ no_text:
     */
 
     *out_image = image;
+    spng_ctx_free(ctx);
 
-    return errorcode;
+    return 0;
 
 error:
-
     spng_ctx_free(ctx);
-    free(image->data);
+    if (image != NULL)
+    {
+        free(image->data);
+    }
     free(image);
 
     return errorcode;
