@@ -185,15 +185,16 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
         {
             for (col = 0; col < image->width; col++)
             {
-                image_buffer[row][col * 3] = image->data[row * image->width * 3 + col * 3];
-                image_buffer[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
-                image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
+                image_buffer12[row][col * 3] = image->data[row * image->width * 3 + col * 3];
+                image_buffer12[row][col * 3 + 1] = image->data[row * image->width * 3 + col * 3 + 1];
+                image_buffer12[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
             }
         }
     }
     else
     {
-        // TODO do not duplicate image buffer (=image->data)
+        // ? We can skip this and write directly from image to output file (see below)
+        /*
         image_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, image->height);
 
         for (row = 0; row < image->height; row++)
@@ -205,6 +206,7 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
                 image_buffer[row][col * 3 + 2] = image->data[row * image->width * 3 + col * 3 + 2];
             }
         }
+        */
     }
 
     /* Step 6: while (scan lines remain to be written) */
@@ -235,7 +237,10 @@ int jpeg_encode(char *path, image_t *image, int quality, int data_precision)
              * Here the array is only one element long, but you could pass
              * more than one scanline at a time if that's more convenient.
              */
-            row_pointer[0] = image_buffer[cinfo.next_scanline];
+
+            // row_pointer[0] = image_buffer[cinfo.next_scanline];
+            row_pointer[0] = &image->data[cinfo.next_scanline * row_stride];
+
             (void)jpeg_write_scanlines(&cinfo, row_pointer, 1);
         }
     }
