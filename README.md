@@ -1,8 +1,10 @@
+# [WIP] This project is in development and not ready for use.
+
 # sanitize-image
 
 Fast image sanitizer to securely store potentially malicious user image input.
 
-# References about untrusted files
+## References about untrusted files
 
 - https://libspng.org/docs/decode/#decoding-untrusted-files
 - https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html
