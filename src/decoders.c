@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <setjmp.h>
 
 #include <spng.h>
 #include <jpeglib.h>
@@ -288,18 +289,50 @@ error:
     return errorcode;
 }
 
+struct custom_dec_error_mgr
+{
+    struct jpeg_error_mgr pub; /* "public" fields */
+
+    jmp_buf setjmp_buffer; /* for return to caller */
+};
+
+typedef struct custom_dec_error_mgr *custom_dec_error_ptr;
+
+/*
+ * Here's the routine that will replace the standard error_exit method:
+ */
+
+void custom_dec_error_exit(j_common_ptr cinfo)
+{
+    /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
+    custom_dec_error_ptr err = (custom_dec_error_ptr)cinfo->err;
+
+    /* Always display the message. */
+    /* We could postpone this until after returning, if we chose. */
+    (*cinfo->err->output_message)(cinfo);
+
+    /* Return control to the setjmp point */
+    longjmp(err->setjmp_buffer, 1);
+}
+
 int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
     // TODO Handle errors and malicious input
-
+    int errorcode = 0;
     struct jpeg_decompress_struct cinfo;
-    struct jpeg_error_mgr jerr;
+    struct custom_dec_error_mgr jerr;
     FILE *infile;             /* source file */
     JSAMPARRAY buffer = NULL; /* Output row buffer */
     int col;
     int row_stride; /* physical row width in output buffer */
 
     image_t *image = malloc(sizeof(image));
+
+    if (image == NULL)
+    {
+        errorcode = ERROR_OUT_OF_MEMORY;
+        goto error;
+    }
 
     /* In this example we want to open the input and output files before doing
      * anything else, so that the setjmp() error recovery below can assume the
@@ -312,12 +345,40 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
     if ((infile = fopen(path, "rb")) == NULL)
     {
         fprintf(stderr, "can't open %s\n", path);
-        return 0;
+        errorcode = ERROR_OPENING_FILE;
+        goto error;
     }
 
-    cinfo.err = jpeg_std_error(&jerr);
+    cinfo.err = jpeg_std_error(&jerr.pub);
 
     /* Step 1: allocate and initialize JPEG decompression object */
+
+    /* We set up the normal JPEG error routines, then override error_exit. */
+    cinfo.err = jpeg_std_error(&jerr.pub);
+    jerr.pub.error_exit = custom_dec_error_exit;
+    /* Establish the setjmp return context for my_error_exit to use. */
+    if (setjmp(jerr.setjmp_buffer))
+    {
+        /* If we get here, the JPEG code has signaled an error.
+         * We need to clean up the JPEG object, close the input file, and return.
+         */
+        switch (jerr.pub.msg_code)
+        {
+        case JERR_FILE_READ:
+            errorcode = ERROR_SET_SOURCE;
+            break;
+        case JERR_OUT_OF_MEMORY:
+            errorcode = ERROR_OUT_OF_MEMORY;
+            break;
+        default:
+            errorcode = ERROR_INTERNAL;
+            break;
+        }
+
+        jpeg_destroy_decompress(&cinfo);
+        fclose(infile);
+        return errorcode;
+    }
 
     /* Now we can initialize the JPEG decompression object. */
     jpeg_create_decompress(&cinfo);
@@ -338,14 +399,14 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
     //! limits against malicious input
     if (cinfo.image_width > max_width || cinfo.image_height > max_height)
     {
-        // TODO handle image dims are too big
-        return 1;
+        errorcode = ERROR_IMAGE_SIZE;
+        goto error;
     }
 
     if ((cinfo.image_width * cinfo.image_height * cinfo.num_components * cinfo.data_precision) / 8 > max_size)
     {
-        // TODO handle image is too big
-        return 1;
+        errorcode = ERROR_IMAGE_SIZE;
+        goto error;
     }
 
     image->width = cinfo.image_width;
@@ -374,7 +435,8 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
     if (cinfo.data_precision == 12)
     {
         // TODO error: does not support 12 bit data precision
-        return 1;
+        errorcode = ERROR_NOT_SUPPORTED;
+        goto error;
     }
     else
     {
@@ -426,4 +488,9 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
     /* And we're done! */
     *out_image = image;
     return 0;
+
+error:
+    jpeg_destroy_decompress(&cinfo);
+    fclose(infile);
+    return errorcode;
 }

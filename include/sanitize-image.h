@@ -30,3 +30,4 @@ void randomize_rgb(image_t *image);
 #define ERROR_DECODE 7
 #define ERROR_SET_DEST 8
 #define ERROR_ENCODE 9
+#define ERROR_NOT_SUPPORTED 10

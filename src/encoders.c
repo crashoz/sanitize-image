@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <setjmp.h>
 
 #include <spng.h>
 #include <jpeglib.h>
@@ -100,8 +101,35 @@ error:
     return errorcode;
 }
 
+struct custom_enc_error_mgr
+{
+    struct jpeg_error_mgr pub; /* "public" fields */
+
+    jmp_buf setjmp_buffer; /* for return to caller */
+};
+
+typedef struct custom_enc_error_mgr *custom_enc_error_ptr;
+
+/*
+ * Here's the routine that will replace the standard error_exit method:
+ */
+
+void custom_enc_error_exit(j_common_ptr cinfo)
+{
+    /* cinfo->err really points to a my_error_mgr struct, so coerce pointer */
+    custom_enc_error_ptr err = (custom_enc_error_ptr)cinfo->err;
+
+    /* Always display the message. */
+    /* We could postpone this until after returning, if we chose. */
+    (*cinfo->err->output_message)(cinfo);
+
+    /* Return control to the setjmp point */
+    longjmp(err->setjmp_buffer, 1);
+}
+
 int jpeg_encode(char *path, image_t *image, int quality)
 {
+    int errorcode;
     /* This struct contains the JPEG compression parameters and pointers to
      * working space (which is allocated as needed by the JPEG library).
      * It is possible to have several such structures, representing multiple
@@ -117,7 +145,7 @@ int jpeg_encode(char *path, image_t *image, int quality)
      * Note that this struct must live as long as the main JPEG parameter
      * struct, to avoid dangling-pointer problems.
      */
-    struct jpeg_error_mgr jerr;
+    struct custom_enc_error_mgr jerr;
     /* More stuff */
     FILE *outfile; /* target file */
     JSAMPARRAY image_buffer = NULL;
@@ -127,6 +155,13 @@ int jpeg_encode(char *path, image_t *image, int quality)
     int row, col;
     int data_precision = 8;
 
+    if ((outfile = fopen(path, "wb")) == NULL)
+    {
+        fprintf(stderr, "can't open %s\n", path);
+        errorcode = ERROR_OPENING_FILE;
+        goto error;
+    }
+
     /* Step 1: allocate and initialize JPEG compression object */
 
     /* We have to set up the error handler first, in case the initialization
@@ -134,7 +169,34 @@ int jpeg_encode(char *path, image_t *image, int quality)
      * This routine fills in the contents of struct jerr, and returns jerr's
      * address which we place into the link field in cinfo.
      */
-    cinfo.err = jpeg_std_error(&jerr);
+
+    /* We set up the normal JPEG error routines, then override error_exit. */
+    cinfo.err = jpeg_std_error(&jerr.pub);
+    jerr.pub.error_exit = custom_enc_error_exit;
+    /* Establish the setjmp return context for my_error_exit to use. */
+    if (setjmp(jerr.setjmp_buffer))
+    {
+        /* If we get here, the JPEG code has signaled an error.
+         * We need to clean up the JPEG object, close the input file, and return.
+         */
+        switch (jerr.pub.msg_code)
+        {
+        case JERR_FILE_READ:
+            errorcode = ERROR_SET_SOURCE;
+            break;
+        case JERR_OUT_OF_MEMORY:
+            errorcode = ERROR_OUT_OF_MEMORY;
+            break;
+        default:
+            errorcode = ERROR_INTERNAL;
+            break;
+        }
+
+        jpeg_destroy_compress(&cinfo);
+        fclose(outfile);
+        return errorcode;
+    }
+
     /* Now we can initialize the JPEG compression object. */
     jpeg_create_compress(&cinfo);
 
@@ -146,8 +208,6 @@ int jpeg_encode(char *path, image_t *image, int quality)
      * VERY IMPORTANT: use "b" option to fopen() if you are on a machine that
      * requires it in order to write binary files.
      */
-    if ((outfile = fopen(path, "wb")) == NULL)
-        ERREXIT(&cinfo, JERR_FILE_WRITE);
     jpeg_stdio_dest(&cinfo, outfile);
 
     /* Step 3: set parameters for compression */
@@ -237,4 +297,10 @@ int jpeg_encode(char *path, image_t *image, int quality)
     jpeg_destroy_compress(&cinfo);
 
     /* And we're done! */
+    return 0;
+
+error:
+    jpeg_destroy_compress(&cinfo);
+    fclose(outfile);
+    return errorcode;
 }
