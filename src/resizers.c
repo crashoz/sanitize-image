@@ -5,6 +5,10 @@
 
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
 {
+    int y, sy, y0, fracy;
+    int x, sx, x0, fracx;
+    int offset;
+
     image_t *dst = malloc(sizeof(image_t));
     dst->data = malloc(width * height * 3);
     dst->width = width;
@@ -15,25 +19,101 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
     const int xs = (int)((double)FACTOR * src->width / width + 0.5);
     const int ys = (int)((double)FACTOR * src->height / height + 0.5);
 
-    for (int y = 0; y < height; y++)
+    // Process borders first
+
+    // Y-border
+    for (y = height - 1; y >= 0; y--)
     {
-        const int sy = y * ys;
-        const int y0 = sy >> SHIFT;
-        const int fracy = sy - (y0 << SHIFT);
+        sy = y * ys;
+        y0 = sy >> SHIFT;
 
-        for (int x = 0; x < width; x++)
+        if (y0 < src->height - 1)
         {
-            const int sx = x * xs;
-            const int x0 = sx >> SHIFT;
-            const int fracx = sx - (x0 << SHIFT);
+            break;
+        }
 
-            if (x0 >= src->width - 1 || y0 >= src->height - 1)
+        fracy = sy - (y0 << SHIFT);
+        for (x = 0; x < width - 1; x++)
+        {
+            sx = x * xs;
+            x0 = sx >> SHIFT;
+            fracx = sx - (x0 << SHIFT);
+
+            offset = y0 * row_stride + x0 * 3;
+            for (int i = 0; i < 3; i++)
             {
-                // insert special handling here
-                continue;
+                dst->data[y * (width * 3) + x * 3 + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
+                                                                          src->data[offset + i + 3] * fracx * (FACTOR - fracy) +
+                                                                          src->data[offset + i] * (FACTOR - fracx) * fracy +
+                                                                          src->data[offset + i + 3] * fracx * fracy +
+                                                                          (FACTOR * FACTOR / 2)) >>
+                                                                         (2 * SHIFT));
             }
+        }
+    }
 
-            const int offset = y0 * row_stride + x0 * 3;
+    int y_bound = y + 1;
+
+    // X-border
+    for (x = width - 1; x >= 0; x--)
+    {
+        sx = x * xs;
+        x0 = sx >> SHIFT;
+
+        if (x0 < src->width - 1)
+        {
+            break;
+        }
+
+        fracx = sx - (x0 << SHIFT);
+        for (y = 0; y < height - 1; y++)
+        {
+            sy = y * ys;
+            y0 = sy >> SHIFT;
+            fracy = sy - (y0 << SHIFT);
+
+            offset = y0 * row_stride + x0 * 3;
+            for (int i = 0; i < 3; i++)
+            {
+                dst->data[y * (width * 3) + x * 3 + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
+                                                                          src->data[offset + i] * fracx * (FACTOR - fracy) +
+                                                                          src->data[offset + row_stride + i] * (FACTOR - fracx) * fracy +
+                                                                          src->data[offset + row_stride + i] * fracx * fracy +
+                                                                          (FACTOR * FACTOR / 2)) >>
+                                                                         (2 * SHIFT));
+            }
+        }
+    }
+
+    int x_bound = x + 1;
+
+    // XY-corner
+    const int corner_offset = (src->height - 1) * row_stride + (src->width - 1) * 3;
+    for (y = height - 1; y >= y_bound; y--)
+    {
+        for (x = width - 1; x >= x_bound; x--)
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                dst->data[y * (width * 3) + x * 3 + i] = (unsigned char)(src->data[corner_offset + i]);
+            }
+        }
+    }
+
+    // Rest of the image
+    for (y = 0; y < y_bound; y++)
+    {
+        sy = y * ys;
+        y0 = sy >> SHIFT;
+        fracy = sy - (y0 << SHIFT);
+
+        for (int x = 0; x < x_bound; x++)
+        {
+            sx = x * xs;
+            x0 = sx >> SHIFT;
+            fracx = sx - (x0 << SHIFT);
+
+            offset = y0 * row_stride + x0 * 3;
 
             for (int i = 0; i < 3; i++)
             {
