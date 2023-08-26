@@ -20,6 +20,8 @@ int jpeg_encode(char *path, image_t *image, int quality);
 
 void randomize_rgb(image_t *image);
 
+int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
+
 #define SUCCESS 0
 #define ERROR_OUT_OF_MEMORY 1
 #define ERROR_OPENING_FILE 2

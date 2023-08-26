@@ -2,7 +2,7 @@ file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${sanitize-image_SOURCE_DIR}/include/*.
 
 find_package(TurboJpeg REQUIRED)
 
-add_library(sanitize-image STATIC sanitize-image.c decoders.c encoders.c randomizers.c ${HEADER_LIST})
+add_library(sanitize-image STATIC sanitize-image.c decoders.c encoders.c randomizers.c resizers.c ${HEADER_LIST})
 target_include_directories(sanitize-image PUBLIC ${TURBOJPEG_INCLUDE_DIRS} ../include)
 
 message("${TURBOJPEG_LIBRARIES}")
