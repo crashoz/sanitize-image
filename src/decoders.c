@@ -9,6 +9,7 @@
 
 #include <sanitize-image.h>
 
+/*
 const char *color_type_str(enum spng_color_type color_type)
 {
     switch (color_type)
@@ -27,8 +28,9 @@ const char *color_type_str(enum spng_color_type color_type)
         return "(invalid)";
     }
 }
+*/
 
-int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
+int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
     int errorcode = 0;
     FILE *png;
@@ -44,15 +46,6 @@ int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_s
         goto error;
     }
     image->data = NULL;
-
-    png = fopen(path, "rb");
-
-    if (png == NULL)
-    {
-        printf("error opening input file %s\n", path);
-        errorcode = ERROR_OPENING_FILE;
-        goto error;
-    }
 
     ctx = spng_ctx_new(0);
 
@@ -87,7 +80,7 @@ int png_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_s
     };
 
     /* Set source PNG */
-    if (spng_set_png_file(ctx, png) != 0)
+    if (spng_set_png_buffer(ctx, buffer, buffer_size) != 0)
     {
         errorcode = ERROR_SET_SOURCE;
         goto error;
@@ -315,14 +308,14 @@ void custom_dec_error_exit(j_common_ptr cinfo)
     longjmp(err->setjmp_buffer, 1);
 }
 
-int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
+int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
     // TODO Handle errors and malicious input
     int errorcode = 0;
     struct jpeg_decompress_struct cinfo;
     struct custom_dec_error_mgr jerr;
-    FILE *infile;             /* source file */
-    JSAMPARRAY buffer = NULL; /* Output row buffer */
+    FILE *infile;                 /* source file */
+    JSAMPARRAY out_buffer = NULL; /* Output row buffer */
     int col;
     int row_stride; /* physical row width in output buffer */
 
@@ -341,13 +334,6 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
      * VERY IMPORTANT: use "b" option to fopen() if you are on a machine that
      * requires it in order to read/write binary files.
      */
-
-    if ((infile = fopen(path, "rb")) == NULL)
-    {
-        fprintf(stderr, "can't open %s\n", path);
-        errorcode = ERROR_OPENING_FILE;
-        goto error;
-    }
 
     cinfo.err = jpeg_std_error(&jerr.pub);
 
@@ -385,7 +371,8 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
 
     /* Step 2: specify data source (eg, a file) */
 
-    jpeg_stdio_src(&cinfo, infile);
+    // jpeg_stdio_src(&cinfo, infile);
+    jpeg_mem_src(&cinfo, buffer, buffer_size);
 
     /* Step 3: read file parameters with jpeg_read_header() */
 
@@ -440,7 +427,7 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
     }
     else
     {
-        buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
+        out_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
         image->data = malloc(image->height * row_stride);
     }
 
@@ -456,9 +443,9 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
          * Here the array is only one element long, but you could ask for
          * more than one scanline at a time if that's more convenient.
          */
-        (void)jpeg_read_scanlines(&cinfo, buffer, 1);
-        memcpy(&(image->data[cinfo.output_scanline * row_stride]), buffer[0], row_stride);
-        // fwrite(buffer[0], 1, row_stride, outfile);
+        (void)jpeg_read_scanlines(&cinfo, out_buffer, 1);
+        memcpy(&(image->data[cinfo.output_scanline * row_stride]), out_buffer[0], row_stride);
+        // fwrite(out_buffer[0], 1, row_stride, outfile);
     }
 
     /* Step 7: Finish decompression */
@@ -478,7 +465,7 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
      * so as to simplify the setjmp error logic above.  (Actually, I don't
      * think that jpeg_destroy can do an error exit, but why assume anything...)
      */
-    fclose(infile);
+    // fclose(infile);
     // fclose(outfile);
 
     /* At this point you may want to check to see whether any corrupt-data
@@ -491,6 +478,5 @@ int jpeg_decode(char *path, uint32_t max_width, uint32_t max_height, size_t max_
 
 error:
     jpeg_destroy_decompress(&cinfo);
-    fclose(infile);
     return errorcode;
 }
