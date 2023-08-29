@@ -39,7 +39,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     *out_image = NULL;
 
-    image_t *image = malloc(sizeof(image));
+    image_t *image = malloc(sizeof(image_t));
     if (image == NULL)
     {
         errorcode = ERROR_OUT_OF_MEMORY;
@@ -319,7 +319,7 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
     int col;
     int row_stride; /* physical row width in output buffer */
 
-    image_t *image = malloc(sizeof(image));
+    image_t *image = malloc(sizeof(image_t));
 
     if (image == NULL)
     {
@@ -444,7 +444,9 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
          * more than one scanline at a time if that's more convenient.
          */
         (void)jpeg_read_scanlines(&cinfo, out_buffer, 1);
-        memcpy(&(image->data[cinfo.output_scanline * row_stride]), out_buffer[0], row_stride);
+
+        //! cinfo.output_scanline starts at 1
+        memcpy(&(image->data[(cinfo.output_scanline - 1) * row_stride]), out_buffer[0], row_stride);
         // fwrite(out_buffer[0], 1, row_stride, outfile);
     }
 
