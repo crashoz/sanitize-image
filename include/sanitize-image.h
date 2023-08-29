@@ -10,13 +10,13 @@ typedef struct
     unsigned char *data;
 } image_t;
 
-void sanitize(unsigned char *data, size_t size);
+void sanitize(unsigned char *data, size_t size, const char *path);
 
 int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image);
 int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image);
 
-int png_encode(char *path, image_t *image, enum spng_color_type color_type, int bit_depth);
-int jpeg_encode(char *path, image_t *image, int quality);
+int png_encode(const char *path, image_t *image, enum spng_color_type color_type, int bit_depth);
+int jpeg_encode(const char *path, image_t *image, int quality);
 
 void randomize_rgb(image_t *image);
 

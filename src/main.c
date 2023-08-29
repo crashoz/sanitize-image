@@ -5,7 +5,7 @@
 
 int main(int argc, char **argv)
 {
-    unsigned char buffer[BUFFER_SIZE];
+    unsigned char *buffer = malloc(BUFFER_SIZE);
     FILE *f;
     f = fopen("../../lenna.jpg", "rb");
 
@@ -14,7 +14,9 @@ int main(int argc, char **argv)
 
     fclose(f);
 
-    sanitize(buffer, n);
+    sanitize(buffer, n, "../../new.jpg");
+
+    free(buffer);
 
     return 0;
 }

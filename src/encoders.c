@@ -8,7 +8,7 @@
 
 #include <sanitize-image.h>
 
-int png_encode(char *path, image_t *image, enum spng_color_type color_type, int bit_depth)
+int png_encode(const char *path, image_t *image, enum spng_color_type color_type, int bit_depth)
 {
     int errorcode = 0;
     int fmt;
@@ -127,7 +127,7 @@ void custom_enc_error_exit(j_common_ptr cinfo)
     longjmp(err->setjmp_buffer, 1);
 }
 
-int jpeg_encode(char *path, image_t *image, int quality)
+int jpeg_encode(const char *path, image_t *image, int quality)
 {
     int errorcode;
     /* This struct contains the JPEG compression parameters and pointers to
