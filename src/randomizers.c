@@ -3,7 +3,7 @@
 
 void randomize_rgb(image_t *image)
 {
-    for (uint64_t i = 0; i < image->width * image->height; i++)
+    for (uint64_t i = 0; i < image->width * image->height * 3; i++)
     {
         int r = rand() % 3;
         switch (r)
