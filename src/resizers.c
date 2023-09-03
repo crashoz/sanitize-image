@@ -3,6 +3,42 @@
 #define FACTOR 2048
 #define SHIFT 11
 
+int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type)
+{
+    if (type == RESIZER_NONE)
+    {
+        *dst_ptr = src;
+        return 0;
+    }
+
+    if (src->width == width && src->height == height)
+    {
+        *dst_ptr = src;
+        return 0;
+    }
+
+    if (width == 0)
+    {
+        width = (uint32_t)((src->width * height) / src->height);
+    }
+
+    if (height == 0)
+    {
+        height = (uint32_t)((src->height * width) / src->width);
+    }
+
+    switch (type)
+    {
+    case RESIZER_BILINEAR:
+        bilinear_interp(src, dst_ptr, width, height);
+        break;
+    default:
+        break;
+    }
+
+    return 0;
+}
+
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
 {
     int y, sy, y0, fracy;
