@@ -14,7 +14,10 @@ int main(int argc, char **argv)
 
     fclose(f);
 
-    sanitize(buffer, n, "../../new.jpg");
+    printf("size: %d\n", n);
+
+    options_t options = default_options();
+    sanitize(buffer, n, TYPE_JPEG, "../../new.jpg", options);
 
     free(buffer);
 
