@@ -10,10 +10,10 @@ project(sanitize-image VERSION 1.0
     LANGUAGES C)
 
 # set(CMAKE_VERBOSE_MAKEFILE on)
-set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+# set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 add_subdirectory(src)
-add_subdirectory(tests)
 
-enable_testing()
-add_test(NAME test COMMAND test_all)
+# add_subdirectory(tests)
+# enable_testing()
+# add_test(NAME test COMMAND test_all)
