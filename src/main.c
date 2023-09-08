@@ -17,7 +17,8 @@ int main(int argc, char **argv)
     printf("size: %d\n", n);
 
     options_t options = default_options();
-    sanitize(buffer, n, TYPE_JPEG, "../../new.jpg", options);
+    char res_path[4096];
+    sanitize(buffer, n, TYPE_JPEG, "../../new.jpg", options, res_path, 4096);
 
     free(buffer);
 

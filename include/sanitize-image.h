@@ -13,7 +13,7 @@ typedef enum
 
 typedef struct
 {
-    image_type allowed_types[3];
+    image_type allowed_types[8];
     uint32_t max_width;
     uint32_t max_height;
     size_t max_size;
@@ -22,8 +22,7 @@ typedef struct
 typedef enum
 {
     RANDOMIZER_NONE,
-    RANDOMIZER_AUTO,
-    RANDOMIZER_DEFAULT
+    RANDOMIZER_AUTO
 } randomizer_type;
 
 typedef struct
@@ -74,8 +73,14 @@ typedef struct
     unsigned char *data;
 } image_t;
 
+image_type str_to_type(const char *str);
+int type_to_str(image_type type, char *str, size_t len);
+int type_to_ext(image_type type, char *str, size_t len);
+
 options_t default_options();
-int sanitize(unsigned char *data, size_t size, image_type type, const char *path, options_t options);
+void debug_options(options_t options);
+
+int sanitize(unsigned char *data, size_t size, image_type type, const char *path, options_t options, char *res_path, size_t res_path_len);
 
 int is_png(unsigned char *buffer, size_t len);
 int is_jpeg(unsigned char *buffer, size_t len);

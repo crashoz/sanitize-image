@@ -1,20 +1,16 @@
 #include <stdio.h>
+#include <string.h>
 #include <sanitize-image.h>
 
-options_t default_options()
-{
-    options_t options = {
-        {{TYPE_PNG, TYPE_JPEG}, 1024, 1024, 1024 * 1024 * 3},
-        {RANDOMIZER_DEFAULT},
-        {RESIZER_NONE, 512, 512},
-        {TYPE_JPEG, {}, {90}}};
-    return options;
-}
+#define MAX_PATH_LEN 4096
 
-int sanitize(unsigned char *data, size_t size, image_type input_type, const char *path, options_t options)
+int sanitize(unsigned char *data, size_t size, image_type input_type, const char *path, options_t options, char *res_path, size_t res_path_len)
 {
     int ret, errorcode;
     image_t *im = NULL;
+
+    debug_options(options);
+    // TODO enforce allowed types
 
     // Guess image type with the magic header
     if (input_type == TYPE_UNKNOWN)
@@ -67,7 +63,6 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     case RANDOMIZER_NONE:
         break;
     case RANDOMIZER_AUTO:
-    case RANDOMIZER_DEFAULT:
         randomize_rgb(im);
         break;
     default:
@@ -90,17 +85,26 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         options.output.type = input_type;
     }
 
+    char full_path[MAX_PATH_LEN];
+    strncpy(full_path, path, MAX_PATH_LEN - 8);
+
+    char ext[8];
+    type_to_ext(options.output.type, ext, 8);
+    strncat(full_path, ext, 8);
+
     switch (options.output.type)
     {
     case TYPE_PNG:
-        png_encode(path, im, SPNG_COLOR_TYPE_TRUECOLOR, 8);
+        png_encode(full_path, im, SPNG_COLOR_TYPE_TRUECOLOR, 8);
         break;
     case TYPE_JPEG:
-        jpeg_encode(path, im, options.output.jpeg.quality);
+        jpeg_encode(full_path, im, options.output.jpeg.quality);
         break;
     default:
         break;
     }
+
+    strncpy(res_path, full_path, res_path_len);
 
     free(im->data);
     free(im);
