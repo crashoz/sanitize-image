@@ -81,6 +81,7 @@ typedef struct
 {
     color_type color;
     uint32_t bit_depth;
+    int channels;
     uint32_t width;
     uint32_t height;
     unsigned char *data;
@@ -95,6 +96,7 @@ image_type str_to_type(const char *str);
 int type_to_str(image_type type, char *str, size_t len);
 int type_to_ext(image_type type, char *str, size_t len);
 color_type png_to_color_type(enum spng_color_type color);
+int color_type_to_channels(color_type color);
 
 options_t default_options();
 void debug_options(options_t options);
@@ -110,7 +112,7 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
 int png_encode(const char *path, image_t *image, enum spng_color_type color_type, int bit_depth);
 int jpeg_encode(const char *path, image_t *image, int quality);
 
-void randomize_rgb(image_t *image);
+void randomize_channels(image_t *image);
 
 int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type);
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);

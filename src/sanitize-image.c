@@ -63,7 +63,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     case RANDOMIZER_NONE:
         break;
     case RANDOMIZER_AUTO:
-        randomize_rgb(im);
+        randomize_channels(im);
         break;
     default:
         break;

@@ -86,6 +86,21 @@ color_type png_to_color_type(enum spng_color_type color)
     }
 }
 
+int color_type_to_channels(color_type color)
+{
+    switch (color)
+    {
+    case COLOR_GRAYSCALE:
+        return 1;
+    case COLOR_GRAYSCALE_ALPHA:
+        return 2;
+    case COLOR_RGB:
+        return 3;
+    case COLOR_RGBA:
+        return 4;
+    }
+}
+
 options_t default_options()
 {
     options_t options = {

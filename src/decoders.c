@@ -79,6 +79,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     image->bit_depth = ihdr.bit_depth;
     image->color = png_to_color_type(ihdr.color_type);
+    image->channels = color_type_to_channels(image->color);
 
     /*
     ? display png header info
@@ -122,7 +123,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     size_t image_size,
         image_width;
-    int fmt = SPNG_FMT_RGB8;
+    int fmt = SPNG_FMT_PNG;
 
     ret = spng_decoded_image_size(ctx, fmt, &image_size);
 
@@ -221,13 +222,13 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
             *(uint16_t *)(image->trns) = trns.green;
             *(uint16_t *)(image->trns) = trns.blue;
         case COLOR_PALETTE:
+            image->trns_len = trns.n_type3_entries;
+            image->trns = malloc(trns.n_type3_entries);
             if (image->trns == NULL)
             {
                 errorcode = ERROR_OUT_OF_MEMORY;
                 goto error;
             }
-            image->trns_len = trns.n_type3_entries;
-            image->trns = malloc(trns.n_type3_entries);
             memcpy(image->trns, trns.type3_alpha, trns.n_type3_entries);
         }
     }
@@ -355,7 +356,10 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
 
     image->color = COLOR_RGB;
     image->bit_depth = 8;
+    image->channels = 3;
+    image->trns_len = 0;
     image->trns = NULL;
+    image->palette_len = 0;
     image->palette = NULL;
 
     /* In this example we want to open the input and output files before doing

@@ -17,6 +17,7 @@ int main(int argc, char **argv)
     printf("size: %d\n", n);
 
     options_t options = default_options();
+    options.resizer.type = RESIZER_BILINEAR;
     char res_path[4096];
     sanitize(buffer, n, TYPE_JPEG, "../../new", options, res_path, 4096);
 

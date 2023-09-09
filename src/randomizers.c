@@ -1,9 +1,9 @@
 #include <sanitize-image.h>
 #include <inttypes.h>
 
-void randomize_rgb(image_t *image)
+void randomize_channels(image_t *image)
 {
-    for (uint64_t i = 0; i < image->width * image->height * 3; i++)
+    for (uint64_t i = 0; i < image->width * image->height * image->channels; i++)
     {
         int r = rand() % 3;
         switch (r)
