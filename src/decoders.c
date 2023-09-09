@@ -9,27 +9,6 @@
 
 #include <sanitize-image.h>
 
-/*
-const char *color_type_str(enum spng_color_type color_type)
-{
-    switch (color_type)
-    {
-    case SPNG_COLOR_TYPE_GRAYSCALE:
-        return "grayscale";
-    case SPNG_COLOR_TYPE_TRUECOLOR:
-        return "truecolor";
-    case SPNG_COLOR_TYPE_INDEXED:
-        return "indexed color";
-    case SPNG_COLOR_TYPE_GRAYSCALE_ALPHA:
-        return "grayscale with alpha";
-    case SPNG_COLOR_TYPE_TRUECOLOR_ALPHA:
-        return "truecolor with alpha";
-    default:
-        return "(invalid)";
-    }
-}
-*/
-
 int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
     int errorcode = 0;
@@ -91,13 +70,15 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     if (ret != 0)
     {
-        printf("spng_get_ihdr() error: %s\n", spng_strerror(ret));
         errorcode = ERROR_BAD_HEADER;
         goto error;
     }
 
     image->width = ihdr.width;
     image->height = ihdr.height;
+
+    image->bit_depth = ihdr.bit_depth;
+    image->color = png_to_color_type(ihdr.color_type);
 
     /*
     ? display png header info
@@ -116,25 +97,31 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     */
 
-    /*
-    ? Handling palette
-    struct spng_plte plte = {0};
-    ret = spng_get_plte(ctx, &plte);
-
-    if (ret != 0 && ret != SPNG_ECHUNKAVAIL)
+    if (image->color = COLOR_PALETTE)
     {
-        printf("spng_get_plte() error: %s\n", spng_strerror(ret));
-        errorcode = ERROR_BAD_HEADER;
-        goto error;
+        struct spng_plte plte = {0};
+        ret = spng_get_plte(ctx, &plte);
+
+        if (ret != 0)
+        {
+            errorcode = ERROR_MISSING_PALETTE;
+            goto error;
+        }
+
+        image->palette_len = plte.n_entries;
+
+        image->palette = malloc(3 * plte.n_entries);
+        if (image->palette == NULL)
+        {
+            errorcode = ERROR_OUT_OF_MEMORY;
+            goto error;
+        }
+
+        memcpy(image->palette, plte.entries, 3 * plte.n_entries);
     }
 
-    if (ret == 0)
-    {
-        printf("palette entries: %u\n", plte.n_entries);
-    }
-    */
-
-    size_t image_size, image_width;
+    size_t image_size,
+        image_width;
     int fmt = SPNG_FMT_RGB8;
 
     ret = spng_decoded_image_size(ctx, fmt, &image_size);
@@ -206,65 +193,104 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
         }
         */
 
-    /*
-    ? parse text contained in the png data
-    uint32_t n_text = 0;
-    struct spng_text *text = NULL;
+    // Parse transparency chunk (tRNS)
+    struct spng_trns trns;
+    ret = spng_get_trns(ctx, &trns);
 
-    ret = spng_get_text(ctx, NULL, &n_text);
-
-    if (ret == SPNG_ECHUNKAVAIL) // No text chunks in file
+    if (ret == 0)
     {
-        ret = 0;
-        goto no_text;
-    }
-
-    if (ret)
-    {
-        printf("spng_get_text() error: %s\n", spng_strerror(ret));
-        goto error;
-    }
-
-    text = malloc(n_text * sizeof(struct spng_text));
-
-    if (text == NULL)
-        goto error;
-
-    ret = spng_get_text(ctx, text, &n_text);
-
-    if (ret)
-    {
-        printf("spng_get_text() error: %s\n", spng_strerror(ret));
-        goto no_text;
-    }
-
-    uint32_t i;
-    for (i = 0; i < n_text; i++)
-    {
-        char *type_str = "tEXt";
-        if (text[i].type == SPNG_ITXT)
-            type_str = "iTXt";
-        else if (text[i].type == SPNG_ZTXT)
-            type_str = "zTXt";
-
-        printf("\ntext type: %s\n", type_str);
-        printf("keyword: %s\n", text[i].keyword);
-
-        if (text[i].type == SPNG_ITXT)
+        switch (image->color)
         {
-            printf("language tag: %s\n", text[i].language_tag);
-            printf("translated keyword: %s\n", text[i].translated_keyword);
+        case COLOR_GRAYSCALE:
+            image->trns = malloc(2);
+            if (image->trns == NULL)
+            {
+                errorcode = ERROR_OUT_OF_MEMORY;
+                goto error;
+            }
+            *(uint16_t *)(image->trns) = trns.gray;
+            break;
+        case COLOR_RGB:
+            image->trns = malloc(3 * 2);
+            if (image->trns == NULL)
+            {
+                errorcode = ERROR_OUT_OF_MEMORY;
+                goto error;
+            }
+            *(uint16_t *)(image->trns) = trns.red;
+            *(uint16_t *)(image->trns) = trns.green;
+            *(uint16_t *)(image->trns) = trns.blue;
+        case COLOR_PALETTE:
+            if (image->trns == NULL)
+            {
+                errorcode = ERROR_OUT_OF_MEMORY;
+                goto error;
+            }
+            image->trns_len = trns.n_type3_entries;
+            image->trns = malloc(trns.n_type3_entries);
+            memcpy(image->trns, trns.type3_alpha, trns.n_type3_entries);
         }
-
-        printf("text is %scompressed\n", text[i].compression_flag ? "" : "not ");
-        printf("text length: %lu\n", (unsigned long int)text[i].length);
-        printf("text: %s\n", text[i].text);
     }
+
+    /*
+? parse text contained in the png data
+uint32_t n_text = 0;
+struct spng_text *text = NULL;
+
+ret = spng_get_text(ctx, NULL, &n_text);
+
+if (ret == SPNG_ECHUNKAVAIL) // No text chunks in file
+{
+    ret = 0;
+    goto no_text;
+}
+
+if (ret)
+{
+    printf("spng_get_text() error: %s\n", spng_strerror(ret));
+    goto error;
+}
+
+text = malloc(n_text * sizeof(struct spng_text));
+
+if (text == NULL)
+    goto error;
+
+ret = spng_get_text(ctx, text, &n_text);
+
+if (ret)
+{
+    printf("spng_get_text() error: %s\n", spng_strerror(ret));
+    goto no_text;
+}
+
+uint32_t i;
+for (i = 0; i < n_text; i++)
+{
+    char *type_str = "tEXt";
+    if (text[i].type == SPNG_ITXT)
+        type_str = "iTXt";
+    else if (text[i].type == SPNG_ZTXT)
+        type_str = "zTXt";
+
+    printf("\ntext type: %s\n", type_str);
+    printf("keyword: %s\n", text[i].keyword);
+
+    if (text[i].type == SPNG_ITXT)
+    {
+        printf("language tag: %s\n", text[i].language_tag);
+        printf("translated keyword: %s\n", text[i].translated_keyword);
+    }
+
+    printf("text is %scompressed\n", text[i].compression_flag ? "" : "not ");
+    printf("text length: %lu\n", (unsigned long int)text[i].length);
+    printf("text: %s\n", text[i].text);
+}
 
 no_text:
-    free(text);
+free(text);
 
-    */
+*/
 
     *out_image = image;
     spng_ctx_free(ctx);
@@ -326,6 +352,11 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
         errorcode = ERROR_OUT_OF_MEMORY;
         goto error;
     }
+
+    image->color = COLOR_RGB;
+    image->bit_depth = 8;
+    image->trns = NULL;
+    image->palette = NULL;
 
     /* In this example we want to open the input and output files before doing
      * anything else, so that the setjmp() error recovery below can assume the

@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
     options_t options = default_options();
     char res_path[4096];
-    sanitize(buffer, n, TYPE_JPEG, "../../new.jpg", options, res_path, 4096);
+    sanitize(buffer, n, TYPE_JPEG, "../../new", options, res_path, 4096);
 
     free(buffer);
 

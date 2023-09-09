@@ -67,6 +67,25 @@ int type_to_ext(image_type type, char *str, size_t len)
     return 0;
 }
 
+color_type png_to_color_type(enum spng_color_type color)
+{
+    switch (color)
+    {
+    case SPNG_COLOR_TYPE_GRAYSCALE:
+        return COLOR_GRAYSCALE;
+    case SPNG_COLOR_TYPE_GRAYSCALE_ALPHA:
+        return COLOR_GRAYSCALE_ALPHA;
+    case SPNG_COLOR_TYPE_TRUECOLOR:
+        return COLOR_RGB;
+    case SPNG_COLOR_TYPE_TRUECOLOR_ALPHA:
+        return COLOR_RGBA;
+    case SPNG_COLOR_TYPE_INDEXED:
+        return COLOR_PALETTE;
+    default:
+        return COLOR_UNKNOWN;
+    }
+}
+
 options_t default_options()
 {
     options_t options = {

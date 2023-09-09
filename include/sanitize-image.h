@@ -1,6 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <spng.h>
 
 typedef enum
@@ -66,16 +67,34 @@ typedef struct
     output_options_t output;
 } options_t;
 
+typedef enum
+{
+    COLOR_UNKNOWN,
+    COLOR_GRAYSCALE,
+    COLOR_GRAYSCALE_ALPHA,
+    COLOR_RGB,
+    COLOR_RGBA,
+    COLOR_PALETTE
+} color_type;
+
 typedef struct
 {
+    color_type color;
+    uint32_t bit_depth;
     uint32_t width;
     uint32_t height;
     unsigned char *data;
+
+    uint32_t palette_len;
+    unsigned char *palette;
+    uint32_t trns_len;
+    unsigned char *trns;
 } image_t;
 
 image_type str_to_type(const char *str);
 int type_to_str(image_type type, char *str, size_t len);
 int type_to_ext(image_type type, char *str, size_t len);
+color_type png_to_color_type(enum spng_color_type color);
 
 options_t default_options();
 void debug_options(options_t options);
@@ -108,3 +127,4 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
 #define ERROR_ENCODE 9
 #define ERROR_NOT_SUPPORTED 10
 #define UNKNOWN_IMAGE_TYPE 11
+#define ERROR_MISSING_PALETTE 12
