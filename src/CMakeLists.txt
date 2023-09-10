@@ -40,6 +40,7 @@ set(LIBJPEG_SOURCE_DIR "${SOURCE_DIR}")
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${sanitize-image_SOURCE_DIR}/include/*.h")
 
 add_library(sanitize-image SHARED sanitize-image.c magic.c decoders.c encoders.c randomizers.c resizers.c converters.c utils.c ${HEADER_LIST})
+add_dependencies(sanitize-image libspng libjpeg-turbo)
 
 target_include_directories(sanitize-image PUBLIC "${LIBSPNG_SOURCE_DIR}/spng" "${LIBJPEG_BINARY_DIR}" "${LIBJPEG_SOURCE_DIR}" ../include)
 target_link_directories(sanitize-image PUBLIC "${LIBSPNG_BINARY_DIR}" "${LIBJPEG_BINARY_DIR}")
