@@ -44,6 +44,8 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         return UNKNOWN_IMAGE_TYPE;
     }
 
+    printf("decode ret: %d\n", ret);
+
     if (ret != 0)
     {
         if (im != NULL)
@@ -54,8 +56,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         return ret;
     }
 
-    printf("code: %d\n", ret);
-    printf("size: (%d, %d)\n", im->width, im->height);
+    debug_image(im);
 
     // Randomize color values
     switch (options.randomizer.type)
@@ -79,6 +80,11 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         im = resized_im;
     }
 
+    // Convert
+    // image_t *converted_im;
+    // rgb_to_rgba(im, &converted_im);
+    // im = converted_im;
+
     // Encode to output file
     if (options.output.type == TYPE_INPUT)
     {
@@ -95,7 +101,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     switch (options.output.type)
     {
     case TYPE_PNG:
-        png_encode(full_path, im, SPNG_COLOR_TYPE_TRUECOLOR, 8);
+        png_encode(full_path, im);
         break;
     case TYPE_JPEG:
         jpeg_encode(full_path, im, options.output.jpeg.quality);

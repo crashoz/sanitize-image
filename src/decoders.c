@@ -81,6 +81,8 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     image->color = png_to_color_type(ihdr.color_type);
     image->channels = color_type_to_channels(image->color);
 
+    debug_image(image);
+
     /*
     ? display png header info
     const char *color_name = color_type_str(ihdr.color_type);
@@ -98,7 +100,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     */
 
-    if (image->color = COLOR_PALETTE)
+    if (image->color == COLOR_PALETTE)
     {
         struct spng_plte plte = {0};
         ret = spng_get_plte(ctx, &plte);

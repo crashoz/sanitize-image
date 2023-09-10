@@ -8,7 +8,7 @@
 
 #include <sanitize-image.h>
 
-int png_encode(const char *path, image_t *image, enum spng_color_type color_type, int bit_depth)
+int png_encode(const char *path, image_t *image)
 {
     int errorcode = 0;
     int fmt;
@@ -50,9 +50,9 @@ int png_encode(const char *path, image_t *image, enum spng_color_type color_type
     /* Set image properties, this determines the destination image format */
     ihdr.width = image->width;
     ihdr.height = image->height;
-    ihdr.color_type = color_type;
-    ihdr.bit_depth = bit_depth;
-    size_t length = image->width * image->height * 3;
+    ihdr.color_type = color_type_to_png(image->color);
+    ihdr.bit_depth = image->bit_depth;
+    size_t length = image->width * image->height * image->channels;
     /* Valid color type, bit depth combinations: https://www.w3.org/TR/2003/REC-PNG-20031110/#table111 */
 
     ret = spng_set_ihdr(ctx, &ihdr);
