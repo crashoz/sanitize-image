@@ -96,10 +96,15 @@ image_type str_to_type(const char *str);
 int type_to_str(image_type type, char *str, size_t len);
 int type_to_ext(image_type type, char *str, size_t len);
 color_type png_to_color_type(enum spng_color_type color);
+enum spng_color_type color_type_to_png(color_type color);
 int color_type_to_channels(color_type color);
+const char *color_type_to_str(color_type color);
+color_type str_to_color_type(const char *str);
+
+void debug_options(options_t options);
+void debug_image(image_t *im);
 
 options_t default_options();
-void debug_options(options_t options);
 
 int sanitize(unsigned char *data, size_t size, image_type type, const char *path, options_t options, char *res_path, size_t res_path_len);
 
@@ -109,13 +114,15 @@ int is_jpeg(unsigned char *buffer, size_t len);
 int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image);
 int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image);
 
-int png_encode(const char *path, image_t *image, enum spng_color_type color_type, int bit_depth);
+int png_encode(const char *path, image_t *image);
 int jpeg_encode(const char *path, image_t *image, int quality);
 
 void randomize_channels(image_t *image);
 
 int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type);
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
+
+int rgb_to_rgba(image_t *src, image_t **dst);
 
 #define SUCCESS 0
 #define ERROR_OUT_OF_MEMORY 1

@@ -86,6 +86,69 @@ color_type png_to_color_type(enum spng_color_type color)
     }
 }
 
+enum spng_color_type color_type_to_png(color_type color)
+{
+    switch (color)
+    {
+    case COLOR_GRAYSCALE:
+        return SPNG_COLOR_TYPE_GRAYSCALE;
+    case COLOR_GRAYSCALE_ALPHA:
+        return SPNG_COLOR_TYPE_GRAYSCALE_ALPHA;
+    case COLOR_RGB:
+        return SPNG_COLOR_TYPE_TRUECOLOR;
+    case COLOR_RGBA:
+        return SPNG_COLOR_TYPE_TRUECOLOR_ALPHA;
+    case COLOR_PALETTE:
+        return SPNG_COLOR_TYPE_INDEXED;
+    default:
+        return SPNG_COLOR_TYPE_TRUECOLOR;
+    }
+}
+
+const char *color_type_to_str(color_type color)
+{
+    switch (color)
+    {
+    case COLOR_GRAYSCALE:
+        return "grayscale";
+    case COLOR_GRAYSCALE_ALPHA:
+        return "grayscale alpha";
+    case COLOR_RGB:
+        return "rgb";
+    case COLOR_RGBA:
+        return "rgba";
+    case COLOR_PALETTE:
+        return "palette";
+    default:
+        return "unknown";
+    }
+}
+
+color_type str_to_color_type(const char *str)
+{
+    if (strcmp(str, "grayscale") == 0)
+    {
+        return COLOR_GRAYSCALE;
+    }
+    else if (strcmp(str, "grayscale_alpha") == 0)
+    {
+        return COLOR_GRAYSCALE_ALPHA;
+    }
+    else if (strcmp(str, "rgb") == 0)
+    {
+        return COLOR_RGB;
+    }
+    else if (strcmp(str, "rgba") == 0)
+    {
+        return COLOR_RGBA;
+    }
+    else if (strcmp(str, "palette") == 0)
+    {
+        return COLOR_PALETTE;
+    }
+    return COLOR_UNKNOWN;
+}
+
 int color_type_to_channels(color_type color)
 {
     switch (color)
@@ -144,5 +207,31 @@ void debug_options(options_t options)
     printf("\ttype: %d\n", options.output.type);
     printf("\tjpeg:\n");
     printf("\t\tquality: %d\n", options.output.jpeg.quality);
+    printf("\n");
+}
+
+color_type color;
+uint32_t bit_depth;
+int channels;
+uint32_t width;
+uint32_t height;
+unsigned char *data;
+
+uint32_t palette_len;
+unsigned char *palette;
+uint32_t trns_len;
+unsigned char *trns;
+
+void debug_image(image_t *im)
+{
+    printf("image:\n");
+
+    printf("\tcolor: %s\n", color_type_to_str(im->color));
+    printf("\tbit_depth: %d\n", im->bit_depth);
+    printf("\tchannels: %d\n", im->channels);
+    printf("\twidth: %d\n", im->width);
+    printf("\theight: %d\n", im->height);
+    printf("\tpalette_len: %d\n", im->palette_len);
+    printf("\trns_len: %d\n", im->trns_len);
     printf("\n");
 }
