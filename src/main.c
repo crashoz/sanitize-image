@@ -1,3 +1,6 @@
+#include <time.h>
+#include <stdlib.h>
+
 #include <sanitize-image.h>
 #include <spng.h>
 
@@ -5,9 +8,11 @@
 
 int main(int argc, char **argv)
 {
+    srand(1);
+
     unsigned char *buffer = malloc(BUFFER_SIZE);
     FILE *f;
-    f = fopen("../../alpha.png", "rb");
+    f = fopen("../../lenna.png", "rb");
 
     int n = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, f);
     buffer[n] = '\0';
@@ -17,8 +22,9 @@ int main(int argc, char **argv)
     printf("size: %d\n", n);
 
     options_t options = default_options();
-    options.resizer.type = RESIZER_BILINEAR;
-    options.output.type = TYPE_PNG;
+    options.randomizer.type = RANDOMIZER_NONE;
+    options.resizer.type = RESIZER_NONE;
+    options.output.type = TYPE_INPUT;
     char res_path[4096];
     sanitize(buffer, n, TYPE_PNG, "../../new", options, res_path, 4096);
 
