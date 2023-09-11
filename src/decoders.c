@@ -80,9 +80,6 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     image->bit_depth = ihdr.bit_depth;
     image->color = png_to_color_type(ihdr.color_type);
     image->channels = color_type_to_channels(image->color);
-
-    debug_image(image);
-
     /*
     ? display png header info
     const char *color_name = color_type_str(ihdr.color_type);
@@ -121,6 +118,11 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
         }
 
         memcpy(image->palette, plte.entries, 3 * plte.n_entries);
+    }
+    else
+    {
+        image->palette_len = 0;
+        image->palette = NULL;
     }
 
     size_t image_size,
@@ -205,6 +207,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
         switch (image->color)
         {
         case COLOR_GRAYSCALE:
+            image->trns_len = 1;
             image->trns = malloc(2);
             if (image->trns == NULL)
             {
@@ -214,6 +217,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
             *(uint16_t *)(image->trns) = trns.gray;
             break;
         case COLOR_RGB:
+            image->trns_len = 3;
             image->trns = malloc(3 * 2);
             if (image->trns == NULL)
             {
@@ -233,6 +237,11 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
             }
             memcpy(image->trns, trns.type3_alpha, trns.n_type3_entries);
         }
+    }
+    else
+    {
+        image->trns_len = 0;
+        image->trns = NULL;
     }
 
     /*

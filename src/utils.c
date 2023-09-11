@@ -174,6 +174,14 @@ options_t default_options()
     return options;
 }
 
+void im_shallow_copy(image_t *src, image_t *dst)
+{
+    memcpy(dst, src, sizeof(image_t));
+    dst->data = NULL;
+    dst->palette = NULL;
+    dst->trns = NULL;
+}
+
 void debug_options(options_t options)
 {
     printf("input:\n");
@@ -210,18 +218,6 @@ void debug_options(options_t options)
     printf("\n");
 }
 
-color_type color;
-uint32_t bit_depth;
-int channels;
-uint32_t width;
-uint32_t height;
-unsigned char *data;
-
-uint32_t palette_len;
-unsigned char *palette;
-uint32_t trns_len;
-unsigned char *trns;
-
 void debug_image(image_t *im)
 {
     printf("image:\n");
@@ -232,6 +228,6 @@ void debug_image(image_t *im)
     printf("\twidth: %d\n", im->width);
     printf("\theight: %d\n", im->height);
     printf("\tpalette_len: %d\n", im->palette_len);
-    printf("\trns_len: %d\n", im->trns_len);
+    printf("\ttrns_len: %d\n", im->trns_len);
     printf("\n");
 }

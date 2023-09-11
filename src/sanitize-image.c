@@ -82,8 +82,10 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     // Convert
     // image_t *converted_im;
-    // rgb_to_rgba(im, &converted_im);
+    // rgb_to_grayscale(im, &converted_im);
     // im = converted_im;
+
+    debug_image(im);
 
     // Encode to output file
     if (options.output.type == TYPE_INPUT)

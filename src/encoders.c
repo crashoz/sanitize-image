@@ -95,7 +95,7 @@ int png_encode(const char *path, image_t *image)
     */
 
 error:
-
+    fclose(png);
     spng_ctx_free(ctx);
 
     return errorcode;

@@ -101,6 +101,8 @@ int color_type_to_channels(color_type color);
 const char *color_type_to_str(color_type color);
 color_type str_to_color_type(const char *str);
 
+void im_shallow_copy(image_t *src, image_t *dst);
+
 void debug_options(options_t options);
 void debug_image(image_t *im);
 
@@ -123,6 +125,7 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
 
 int rgb_to_rgba(image_t *src, image_t **dst);
+int rgb_to_grayscale(image_t *src, image_t **dst);
 
 #define SUCCESS 0
 #define ERROR_OUT_OF_MEMORY 1

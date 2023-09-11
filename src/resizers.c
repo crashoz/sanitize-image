@@ -50,15 +50,19 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
     {
         return 1;
     }
+
+    im_shallow_copy(src, dst);
+    dst->width = width;
+    dst->height = height;
+
     dst->data = malloc(width * height * src->channels);
     if (dst->data == NULL)
     {
         return 1;
     }
-    dst->width = width;
-    dst->height = height;
 
     const int row_stride = src->width * src->channels;
+    const int dst_row_stride = width * src->channels;
     const int channels = src->channels;
 
     const int xs = (int)((double)FACTOR * src->width / width + 0.5);
@@ -87,12 +91,12 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
             offset = y0 * row_stride + x0 * channels;
             for (int i = 0; i < channels; i++)
             {
-                dst->data[y * row_stride + x * channels + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
-                                                                                src->data[offset + i + channels] * fracx * (FACTOR - fracy) +
-                                                                                src->data[offset + i] * (FACTOR - fracx) * fracy +
-                                                                                src->data[offset + i + channels] * fracx * fracy +
-                                                                                (FACTOR * FACTOR / 2)) >>
-                                                                               (2 * SHIFT));
+                dst->data[y * dst_row_stride + x * channels + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
+                                                                                    src->data[offset + i + channels] * fracx * (FACTOR - fracy) +
+                                                                                    src->data[offset + i] * (FACTOR - fracx) * fracy +
+                                                                                    src->data[offset + i + channels] * fracx * fracy +
+                                                                                    (FACTOR * FACTOR / 2)) >>
+                                                                                   (2 * SHIFT));
             }
         }
     }
@@ -120,12 +124,12 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
             offset = y0 * row_stride + x0 * channels;
             for (int i = 0; i < channels; i++)
             {
-                dst->data[y * row_stride + x * channels + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
-                                                                                src->data[offset + i] * fracx * (FACTOR - fracy) +
-                                                                                src->data[offset + row_stride + i] * (FACTOR - fracx) * fracy +
-                                                                                src->data[offset + row_stride + i] * fracx * fracy +
-                                                                                (FACTOR * FACTOR / 2)) >>
-                                                                               (2 * SHIFT));
+                dst->data[y * dst_row_stride + x * channels + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
+                                                                                    src->data[offset + i] * fracx * (FACTOR - fracy) +
+                                                                                    src->data[offset + row_stride + i] * (FACTOR - fracx) * fracy +
+                                                                                    src->data[offset + row_stride + i] * fracx * fracy +
+                                                                                    (FACTOR * FACTOR / 2)) >>
+                                                                                   (2 * SHIFT));
             }
         }
     }
@@ -140,7 +144,7 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
         {
             for (int i = 0; i < channels; i++)
             {
-                dst->data[y * row_stride + x * channels + i] = (unsigned char)(src->data[corner_offset + i]);
+                dst->data[y * dst_row_stride + x * channels + i] = (unsigned char)(src->data[corner_offset + i]);
             }
         }
     }
@@ -162,12 +166,13 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
 
             for (int i = 0; i < channels; i++)
             {
-                dst->data[y * row_stride + x * channels + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
-                                                                                src->data[offset + i + channels] * fracx * (FACTOR - fracy) +
-                                                                                src->data[offset + row_stride + i] * (FACTOR - fracx) * fracy +
-                                                                                src->data[offset + row_stride + i + channels] * fracx * fracy +
-                                                                                (FACTOR * FACTOR / 2)) >>
-                                                                               (2 * SHIFT));
+
+                dst->data[y * dst_row_stride + x * channels + i] = (unsigned char)((src->data[offset + i] * (FACTOR - fracx) * (FACTOR - fracy) +
+                                                                                    src->data[offset + i + channels] * fracx * (FACTOR - fracy) +
+                                                                                    src->data[offset + row_stride + i] * (FACTOR - fracx) * fracy +
+                                                                                    src->data[offset + row_stride + i + channels] * fracx * fracy +
+                                                                                    (FACTOR * FACTOR / 2)) >>
+                                                                                   (2 * SHIFT));
             }
         }
     }
