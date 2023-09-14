@@ -14,7 +14,7 @@ set(LIBCHECK_BINARY_DIR "${BINARY_DIR}")
 ExternalProject_Get_Property(libcheck SOURCE_DIR)
 set(LIBCHECK_SOURCE_DIR "${SOURCE_DIR}")
 
-add_executable(test_all test_sanitize-image.c)
+add_executable(test_all tests.c test-utils.c)
 add_dependencies(test_all libcheck)
 
 target_include_directories(test_all PUBLIC "${LIBCHECK_SOURCE_DIR}/src")
