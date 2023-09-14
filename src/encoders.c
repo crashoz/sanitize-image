@@ -63,6 +63,26 @@ int png_encode(const char *path, image_t *image)
         goto error;
     }
 
+    if (image->color = COLOR_PALETTE)
+    {
+        struct spng_plte plte;
+        plte.n_entries = image->palette_len;
+        for (int i = 0; i < image->palette_len; i++)
+        {
+            plte.entries[i].red = image->palette[i * 3];
+            plte.entries[i].green = image->palette[i * 3 + 1];
+            plte.entries[i].blue = image->palette[i * 3 + 2];
+            plte.entries[i].alpha = 255;
+        }
+        ret = spng_set_plte(ctx, &plte);
+        if (ret != 0)
+        {
+            printf("spng_encode_image() error: %s\n", spng_strerror(ret));
+            errorcode = ERROR_ENCODE;
+            goto error;
+        }
+    }
+
     /* When encoding fmt is the source format */
     /* SPNG_FMT_PNG is a special value that matches the format in ihdr */
     fmt = SPNG_FMT_PNG;

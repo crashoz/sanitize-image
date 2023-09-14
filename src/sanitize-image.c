@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sanitize-image.h>
+#include <quantizers.h>
 
 #define MAX_PATH_LEN 4096
 
@@ -82,8 +83,9 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     // Convert
     // image_t *converted_im;
-    // rgb_to_grayscale(im, &converted_im);
+    // rgb_to_grayscale_alpha(im, &converted_im);
     // im = converted_im;
+    quantize_rgb(im);
 
     debug_image(im);
 
