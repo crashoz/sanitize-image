@@ -126,6 +126,7 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
 
 int rgb_to_rgba(image_t *src, image_t **dst);
 int rgb_to_grayscale(image_t *src, image_t **dst);
+int rgb_to_grayscale_alpha(image_t *src, image_t **dst);
 
 #define SUCCESS 0
 #define ERROR_OUT_OF_MEMORY 1
