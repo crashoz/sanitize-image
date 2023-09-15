@@ -17,7 +17,7 @@ typedef struct octree_node octree_node_t;
 
 octree_node_t *octree_create_node();
 void octree_destroy(octree_node_t *node);
-void octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b);
+int octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b);
 
 typedef struct
 {
@@ -34,16 +34,19 @@ typedef struct
 
 heap_t *heap_create(size_t capacity);
 void heap_destroy(heap_t *heap);
-void heap_grow(heap_t *heap);
+int heap_grow(heap_t *heap);
 void heap_swap(heap_t *heap, uint32_t i, uint32_t j);
-void heap_insert(heap_t *heap, heap_node_t elt);
+int heap_insert(heap_t *heap, heap_node_t elt);
 void heap_down(heap_t *heap, uint32_t i);
 heap_node_t *heap_peek(heap_t *heap);
 heap_node_t heap_extract(heap_t *heap);
 heap_node_t heap_insert_extract(heap_t *heap, heap_node_t elt);
 
-void octree_to_heap_rec(octree_node_t *node, heap_t *heap);
+int octree_to_heap_rec(octree_node_t *node, heap_t *heap);
 heap_t *octree_to_heap(octree_node_t *node);
 void octree_reduce(heap_t *heap, uint8_t n_colors);
+void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res);
+
+int dither(image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data);
 
 void quantize_rgb(image_t *image);

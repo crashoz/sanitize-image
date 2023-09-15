@@ -82,10 +82,11 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     }
 
     // Convert
-    // image_t *converted_im;
-    // rgb_to_grayscale_alpha(im, &converted_im);
+    image_t *converted_im;
+    // rgb_to_palette(im, &converted_im);
+    // free(im->data);
+    // free(im);
     // im = converted_im;
-    quantize_rgb(im);
 
     debug_image(im);
 

@@ -46,6 +46,26 @@ START_TEST(png_grayscale_alpha)
 }
 END_TEST
 
+START_TEST(png_palette)
+{
+    options_t options = default_options();
+    options.randomizer.type = RANDOMIZER_NONE;
+    options.output.type = TYPE_INPUT;
+
+    test_snapshot("../tests/snapshots/png/palette.png", "../tests/snapshots/png/palette.png", options);
+}
+END_TEST
+
+START_TEST(jpeg_rgb)
+{
+    options_t options = default_options();
+    options.randomizer.type = RANDOMIZER_NONE;
+    options.output.type = TYPE_INPUT;
+
+    test_snapshot("../tests/snapshots/jpeg/rgb.jpg", "../tests/snapshots/jpeg/rgb.jpg", options);
+}
+END_TEST
+
 Suite *sanitizeimage_suite(void)
 {
     Suite *s;
@@ -54,14 +74,19 @@ Suite *sanitizeimage_suite(void)
 
     s = suite_create("Sanitize Image");
 
-    /* Core test case */
-    tc_core = tcase_create("Core");
+    tc_core = tcase_create("png pass through");
 
-    // tcase_add_checked_fixture(tc_core, setup, teardown);
     tcase_add_test(tc_core, png_rgb);
     tcase_add_test(tc_core, png_rgba);
     tcase_add_test(tc_core, png_grayscale);
     tcase_add_test(tc_core, png_grayscale_alpha);
+    tcase_add_test(tc_core, png_palette);
+
+    suite_add_tcase(s, tc_core);
+
+    tc_core = tcase_create("jpeg pass through");
+
+    tcase_add_test(tc_core, jpeg_rgb);
 
     suite_add_tcase(s, tc_core);
 

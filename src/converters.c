@@ -1,4 +1,5 @@
 #include <sanitize-image.h>
+#include <quantizers.h>
 
 const uint32_t x = 313524;
 const uint32_t y = 615514;
@@ -8,6 +9,10 @@ const uint32_t k = 1048576;
 int rgb_to_rgba(image_t *src, image_t **dst)
 {
     image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
     im->color = COLOR_RGBA;
     im->bit_depth = 8;
@@ -42,6 +47,10 @@ int rgb_to_rgba(image_t *src, image_t **dst)
 int rgb_to_grayscale(image_t *src, image_t **dst)
 {
     image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
     im->color = COLOR_GRAYSCALE;
     im->bit_depth = 8;
@@ -74,6 +83,10 @@ int rgb_to_grayscale(image_t *src, image_t **dst)
 int rgb_to_grayscale_alpha(image_t *src, image_t **dst)
 {
     image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
     im->color = COLOR_GRAYSCALE_ALPHA;
     im->bit_depth = 8;
@@ -101,5 +114,77 @@ int rgb_to_grayscale_alpha(image_t *src, image_t **dst)
 
     *dst = im;
 
+    return SUCCESS;
+}
+
+int rgb_to_palette(image_t *src, image_t **dst)
+{
+    int ret;
+    int n_colors = 255;
+    octree_node_t *octree = octree_create_node();
+    if (octree == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    for (uint32_t i = 0; i < src->width * src->height; i++)
+    {
+        ret = octree_insert_color(octree, src->data[i * 3], src->data[i * 3 + 1], src->data[i * 3 + 2]);
+        if (ret != 0)
+        {
+            return ret;
+        }
+    }
+
+    heap_t *heap = octree_to_heap(octree);
+    if (heap == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    octree_reduce(heap, n_colors);
+
+    unsigned char *indexed_data = malloc(src->width * src->height);
+    if (indexed_data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    unsigned char *palette = malloc(n_colors * 3);
+    if (palette == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    int plte_len;
+    octree_palette(src, octree, n_colors, indexed_data, palette, &plte_len);
+
+    ret = dither(src, palette, plte_len, indexed_data);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_PALETTE;
+    im->bit_depth = 8;
+    im->channels = 1;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = indexed_data;
+    im->palette_len = plte_len;
+    im->palette = palette;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    heap_destroy(heap);
+    octree_destroy(octree);
+
+    *dst = im;
     return SUCCESS;
 }

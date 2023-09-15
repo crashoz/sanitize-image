@@ -28,6 +28,11 @@ void debug_node(octree_node_t *node)
 octree_node_t *octree_create_node()
 {
     octree_node_t *node = calloc(1, sizeof(octree_node_t));
+    if (node == NULL)
+    {
+        return NULL;
+    }
+
     node->palette = 255;
     return node;
 }
@@ -47,7 +52,7 @@ void octree_destroy(octree_node_t *node)
     free(node);
 }
 
-void octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b)
+int octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b)
 {
     for (int i = 0; i < 8; i++)
     {
@@ -56,6 +61,10 @@ void octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b)
         if (node->children[idx] == NULL)
         {
             node->children[idx] = octree_create_node();
+            if (node->children[idx] == NULL)
+            {
+                return ERROR_OUT_OF_MEMORY;
+            }
         }
         node->children[idx]->parent = node;
         node = node->children[idx];
@@ -65,20 +74,27 @@ void octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b)
     node->g += g;
     node->b += b;
     node->count++;
+
+    return SUCCESS;
 }
 
-void octree_to_heap_rec(octree_node_t *node, heap_t *heap)
+int octree_to_heap_rec(octree_node_t *node, heap_t *heap)
 {
+    int ret;
     if (node == NULL)
     {
-        return;
+        return SUCCESS;
     }
 
     if (node->count > 0)
     {
         if (heap->length >= heap->capacity)
         {
-            heap_grow(heap);
+            ret = heap_grow(heap);
+            if (ret != 0)
+            {
+                return ret;
+            }
         }
         heap->arr[heap->length].priority = node->count;
         heap->arr[heap->length].octree_node = node;
@@ -88,15 +104,28 @@ void octree_to_heap_rec(octree_node_t *node, heap_t *heap)
     {
         for (int i = 0; i < 8; i++)
         {
-            octree_to_heap_rec(node->children[i], heap);
+            ret = octree_to_heap_rec(node->children[i], heap);
+            if (ret != 0)
+            {
+                return ret;
+            }
         }
     }
+    return SUCCESS;
 }
 
 heap_t *octree_to_heap(octree_node_t *node)
 {
     heap_t *heap = heap_create(512);
-    octree_to_heap_rec(node, heap);
+    if (heap == NULL)
+    {
+        return NULL;
+    }
+
+    if (octree_to_heap_rec(node, heap) != 0)
+    {
+        return NULL;
+    }
 
     for (int i = (heap->length - 1) / 2; i > 0; i--)
     {
@@ -109,7 +138,6 @@ heap_t *octree_to_heap(octree_node_t *node)
 void octree_reduce(heap_t *heap, uint8_t n_colors)
 {
     uint32_t total_colors = heap->length;
-    printf("total colors: %d\n", total_colors);
     while (total_colors > n_colors)
     {
         heap_node_t *min_node = heap_peek(heap);
@@ -152,8 +180,6 @@ void octree_reduce(heap_t *heap, uint8_t n_colors)
             total_colors--;
         }
     }
-
-    printf("total colors: %d\n", total_colors);
 }
 
 int closest(unsigned char *palette, int palette_len, uint8_t r, uint8_t g, uint8_t b)
@@ -174,9 +200,14 @@ int closest(unsigned char *palette, int palette_len, uint8_t r, uint8_t g, uint8
     return best_idx;
 }
 
-void dither(image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data)
+// Sierra Lite dithering
+int dither(image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data)
 {
     int32_t *dither = calloc(image->width * 2 * 3, sizeof(int32_t));
+    if (dither == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
     for (uint32_t k = 0; k < image->width * image->height; k++)
     {
@@ -221,6 +252,8 @@ void dither(image_t *image, unsigned char *palette, int palette_len, unsigned ch
             dither[(k % image->width + image->width) * 3 + 2] += quant_err_b * 1 / 4;
         }
     }
+
+    return SUCCESS;
 }
 
 void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res)
@@ -238,9 +271,7 @@ void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigne
         for (int i = 0; i < 8; i++)
         {
             int idx = (((r >> (7 - i)) & 0x01) << 2) | (((g >> (7 - i)) & 0x01) << 1) | (((b >> (7 - i)) & 0x01));
-            // printf("i: %d\n", i);
-            // debug_node(node);
-            // printf("idx: %d, child: %p\n", idx, node->children[idx]);
+
             if (node->children[idx] == NULL)
             {
                 if (node->palette == 255)
@@ -261,14 +292,21 @@ void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigne
         }
     }
 
-    printf("plte_len end: %d\n", plte_len);
     *plte_len_res = plte_len;
 }
 
 heap_t *heap_create(size_t capacity)
 {
     heap_t *heap = malloc(sizeof(heap_t));
+    if (heap == NULL)
+    {
+        return NULL;
+    }
     heap->arr = malloc(capacity * sizeof(heap_node_t));
+    if (heap->arr == NULL)
+    {
+        return NULL;
+    }
     heap->length = 1;
     heap->capacity = capacity;
     return heap;
@@ -280,10 +318,16 @@ void heap_destroy(heap_t *heap)
     free(heap);
 }
 
-void heap_grow(heap_t *heap)
+int heap_grow(heap_t *heap)
 {
     heap->capacity *= 2;
     heap->arr = realloc(heap->arr, heap->capacity * sizeof(heap_node_t));
+    if (heap->arr == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    return SUCCESS;
 }
 
 void heap_swap(heap_t *heap, uint32_t i, uint32_t j)
@@ -293,11 +337,16 @@ void heap_swap(heap_t *heap, uint32_t i, uint32_t j)
     heap->arr[j] = tmp;
 }
 
-void heap_insert(heap_t *heap, heap_node_t elt)
+int heap_insert(heap_t *heap, heap_node_t elt)
 {
+    int ret;
     if (heap->length >= heap->capacity)
     {
-        heap_grow(heap);
+        ret = heap_grow(heap);
+        if (ret != 0)
+        {
+            return ret;
+        }
     }
 
     heap->arr[heap->length] = elt;
@@ -308,6 +357,8 @@ void heap_insert(heap_t *heap, heap_node_t elt)
         heap_swap(heap, i / 2, i);
         i /= 2;
     }
+
+    return SUCCESS;
 }
 
 void heap_down(heap_t *heap, uint32_t i)
