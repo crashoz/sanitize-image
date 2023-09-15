@@ -5,6 +5,9 @@
 #include <sanitize-image.h>
 #include <quantizers.h>
 
+#define clamp(v) (v) > 255 ? 255 : (v) < 0 ? 0 \
+                                           : (v)
+
 void debug_node(octree_node_t *node)
 {
     printf("node: %p\n", node);
@@ -153,12 +156,77 @@ void octree_reduce(heap_t *heap, uint8_t n_colors)
     printf("total colors: %d\n", total_colors);
 }
 
+int closest(unsigned char *palette, int palette_len, uint8_t r, uint8_t g, uint8_t b)
+{
+    int best = 3 * 255 * 255;
+    int best_idx = -1;
+
+    for (int i = 0; i < palette_len; i++)
+    {
+        int d = (r - palette[i * 3]) * (r - palette[i * 3]) + (g - palette[i * 3 + 1]) * (g - palette[i * 3 + 1]) + (b - palette[i * 3 + 2]) * (b - palette[i * 3 + 2]);
+        if (d < best)
+        {
+            best = d;
+            best_idx = i;
+        }
+    }
+
+    return best_idx;
+}
+
+void dither(image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data)
+{
+    int32_t *dither = calloc(image->width * 2 * 3, sizeof(int32_t));
+
+    for (uint32_t k = 0; k < image->width * image->height; k++)
+    {
+        int32_t r_sum = image->data[k * 3] + dither[(k % image->width) * 3];
+        int32_t g_sum = image->data[k * 3 + 1] + dither[(k % image->width) * 3 + 1];
+        int32_t b_sum = image->data[k * 3 + 2] + dither[(k % image->width) * 3 + 2];
+
+        uint8_t r = clamp(r_sum);
+        uint8_t g = clamp(g_sum);
+        uint8_t b = clamp(b_sum);
+
+        int pidx = closest(palette, palette_len, r, g, b);
+        indexed_data[k] = pidx;
+
+        int quant_err_r = r - palette[pidx * 3];
+        int quant_err_g = g - palette[pidx * 3 + 1];
+        int quant_err_b = b - palette[pidx * 3 + 2];
+
+        if (k % image->width < image->width - 1)
+        {
+            dither[(k % image->width + 1) * 3] += quant_err_r * 2 / 4;
+            dither[(k % image->width + 1) * 3 + 1] += quant_err_g * 2 / 4;
+            dither[(k % image->width + 1) * 3 + 2] += quant_err_b * 2 / 4;
+        }
+        else
+        {
+            memcpy(dither, dither + image->width * 3, image->width * 3 * sizeof(int32_t));
+            memset(dither + image->width * 3, 0, image->width * 3 * sizeof(int32_t));
+        }
+
+        if (k % image->width > 0 && k / image->width < image->height - 1)
+        {
+            dither[(k % image->width - 1 + image->width) * 3] += quant_err_r * 1 / 4;
+            dither[(k % image->width - 1 + image->width) * 3 + 1] += quant_err_g * 1 / 4;
+            dither[(k % image->width - 1 + image->width) * 3 + 2] += quant_err_b * 1 / 4;
+        }
+
+        if (k / image->width < image->height - 1)
+        {
+            dither[(k % image->width + image->width) * 3] += quant_err_r * 1 / 4;
+            dither[(k % image->width + image->width) * 3 + 1] += quant_err_g * 1 / 4;
+            dither[(k % image->width + image->width) * 3 + 2] += quant_err_b * 1 / 4;
+        }
+    }
+}
+
 void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res)
 {
     octree_node_t *node;
     int plte_len = 0;
-
-    printf("plte_len begin: %d\n", plte_len);
 
     for (uint32_t k = 0; k < image->width * image->height; k++)
     {
@@ -177,7 +245,6 @@ void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigne
             {
                 if (node->palette == 255)
                 {
-                    printf("plte_len: %d\n", plte_len);
                     palette[plte_len * 3] = node->r / node->count;
                     palette[plte_len * 3 + 1] = node->g / node->count;
                     palette[plte_len * 3 + 2] = node->b / node->count;
@@ -186,6 +253,7 @@ void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigne
 
                     plte_len++;
                 }
+
                 indexed_data[k] = node->palette;
                 break;
             }
@@ -297,7 +365,7 @@ heap_node_t heap_insert_extract(heap_t *heap, heap_node_t elt)
 
 void quantize_rgb(image_t *image)
 {
-    int n_colors = 16;
+    int n_colors = 255;
     octree_node_t *octree = octree_create_node();
 
     for (uint32_t i = 0; i < image->width * image->height; i++)
@@ -315,6 +383,7 @@ void quantize_rgb(image_t *image)
     unsigned char *palette = malloc(n_colors * 3);
     int plte_len;
     octree_palette(image, octree, n_colors, indexed_data, palette, &plte_len);
+    dither(image, palette, plte_len, indexed_data);
 
     free(image->data);
     image->data = indexed_data;
