@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <stdio.h>
+#include <string.h>
 #include <setjmp.h>
 
 #include <spng.h>
@@ -63,7 +64,7 @@ int png_encode(const char *path, image_t *image)
         goto error;
     }
 
-    if (image->color = COLOR_PALETTE)
+    if (image->color == COLOR_PALETTE)
     {
         struct spng_plte plte;
         plte.n_entries = image->palette_len;
@@ -77,7 +78,36 @@ int png_encode(const char *path, image_t *image)
         ret = spng_set_plte(ctx, &plte);
         if (ret != 0)
         {
-            printf("spng_encode_image() error: %s\n", spng_strerror(ret));
+            printf("spng_set_plte() error: %s\n", spng_strerror(ret));
+            errorcode = ERROR_ENCODE;
+            goto error;
+        }
+    }
+
+    if (image->trns_len != 0)
+    {
+        struct spng_trns trns;
+
+        switch (image->color)
+        {
+        case COLOR_GRAYSCALE:
+            trns.gray = *(uint16_t *)(image->trns);
+            break;
+        case COLOR_RGB:
+            trns.red = *(uint16_t *)(image->trns);
+            trns.green = *((uint16_t *)(image->trns) + 1);
+            trns.blue = *((uint16_t *)(image->trns) + 2);
+            break;
+        case COLOR_PALETTE:
+            trns.n_type3_entries = image->trns_len;
+            memcpy(trns.type3_alpha, image->trns, image->trns_len);
+            break;
+        }
+
+        ret = spng_set_trns(ctx, &trns);
+        if (ret != 0)
+        {
+            printf("spng_set_trns() error: %s\n", spng_strerror(ret));
             errorcode = ERROR_ENCODE;
             goto error;
         }

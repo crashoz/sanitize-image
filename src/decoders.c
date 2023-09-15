@@ -225,8 +225,9 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
                 goto error;
             }
             *(uint16_t *)(image->trns) = trns.red;
-            *(uint16_t *)(image->trns) = trns.green;
-            *(uint16_t *)(image->trns) = trns.blue;
+            *((uint16_t *)(image->trns) + 1) = trns.green;
+            *((uint16_t *)(image->trns) + 2) = trns.blue;
+            break;
         case COLOR_PALETTE:
             image->trns_len = trns.n_type3_entries;
             image->trns = malloc(trns.n_type3_entries);
@@ -236,6 +237,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
                 goto error;
             }
             memcpy(image->trns, trns.type3_alpha, trns.n_type3_entries);
+            break;
         }
     }
     else

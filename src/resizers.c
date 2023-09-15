@@ -41,6 +41,7 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
 
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
 {
+    // TODO handle palette and trns
     int y, sy, y0, fracy;
     int x, sx, x0, fracx;
     int offset;
