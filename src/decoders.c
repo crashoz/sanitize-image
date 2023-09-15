@@ -9,6 +9,8 @@
 
 #include <sanitize-image.h>
 
+// TODO png bKGD chunk
+
 int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
     int errorcode = 0;
