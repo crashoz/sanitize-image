@@ -24,6 +24,46 @@ int randomize_channels(image_t *image)
     return SUCCESS;
 }
 
+int randomize_channels_keep_trns(image_t *image)
+{
+    for (uint64_t i = 0; i < image->width * image->height; i++)
+    {
+        int k = 0;
+        for (k = 0; k < image->channels; k++)
+        {
+            if (image->data[i * image->channels + k] != *(((uint16_t *)image->trns) + k))
+            {
+                break;
+            }
+        }
+
+        if (k == image->channels)
+        {
+            continue;
+        }
+
+        for (k = 0; k < image->channels; k++)
+        {
+            int r = rand() % 3;
+            switch (r)
+            {
+            case 0:
+                if (image->data[i * image->channels + k] > 0)
+                {
+                    image->data[i * image->channels + k]--;
+                }
+            case 1:
+                if (image->data[i * image->channels + k] < 255)
+                {
+                    image->data[i * image->channels + k]++;
+                }
+            }
+        }
+    }
+
+    return SUCCESS;
+}
+
 int randomize_palette(image_t *image)
 {
     unsigned char mapping[image->palette_len];

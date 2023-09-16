@@ -72,7 +72,14 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         }
         else
         {
-            ret = randomize_channels(im);
+            if (im->trns_len > 0)
+            {
+                ret = randomize_channels_keep_trns(im);
+            }
+            else
+            {
+                ret = randomize_channels(im);
+            }
         }
         break;
     default:
