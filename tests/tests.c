@@ -56,6 +56,16 @@ START_TEST(png_palette)
 }
 END_TEST
 
+START_TEST(png_trns)
+{
+    options_t options = default_options();
+    options.randomizer.type = RANDOMIZER_NONE;
+    options.output.type = TYPE_INPUT;
+
+    test_snapshot("../tests/snapshots/png/trns.png", "../tests/snapshots/png/trns.png", options);
+}
+END_TEST
+
 START_TEST(jpeg_rgb)
 {
     options_t options = default_options();
@@ -81,6 +91,7 @@ Suite *sanitizeimage_suite(void)
     tcase_add_test(tc_core, png_grayscale);
     tcase_add_test(tc_core, png_grayscale_alpha);
     tcase_add_test(tc_core, png_palette);
+    tcase_add_test(tc_core, png_trns);
 
     suite_add_tcase(s, tc_core);
 

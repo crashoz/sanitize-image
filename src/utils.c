@@ -161,6 +161,8 @@ int color_type_to_channels(color_type color)
         return 3;
     case COLOR_RGBA:
         return 4;
+    case COLOR_PALETTE:
+        return 1;
     }
 }
 

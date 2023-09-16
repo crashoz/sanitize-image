@@ -60,15 +60,30 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     debug_image(im);
 
     // Randomize color values
+    ret = 0;
     switch (options.randomizer.type)
     {
     case RANDOMIZER_NONE:
         break;
     case RANDOMIZER_AUTO:
-        randomize_channels(im);
+        if (im->color == COLOR_PALETTE)
+        {
+            ret = randomize_palette(im);
+        }
+        else
+        {
+            ret = randomize_channels(im);
+        }
         break;
     default:
         break;
+    }
+
+    if (ret != 0)
+    {
+        free(im->data);
+        free(im);
+        return ret;
     }
 
     // Resize image

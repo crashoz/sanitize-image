@@ -119,7 +119,13 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
             goto error;
         }
 
-        memcpy(image->palette, plte.entries, 3 * plte.n_entries);
+        // memcpy(image->palette, plte.entries, 3 * plte.n_entries);
+        for (int i = 0; i < plte.n_entries; i++)
+        {
+            image->palette[i * 3] = plte.entries[i].red;
+            image->palette[i * 3 + 1] = plte.entries[i].green;
+            image->palette[i * 3 + 2] = plte.entries[i].blue;
+        }
     }
     else
     {

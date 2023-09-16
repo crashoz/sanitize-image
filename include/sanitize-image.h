@@ -119,7 +119,8 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
 int png_encode(const char *path, image_t *image);
 int jpeg_encode(const char *path, image_t *image, int quality);
 
-void randomize_channels(image_t *image);
+int randomize_channels(image_t *image);
+int randomize_palette(image_t *image);
 
 int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type);
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
