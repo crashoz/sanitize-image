@@ -79,27 +79,27 @@ END_TEST
 Suite *sanitizeimage_suite(void)
 {
     Suite *s;
-    TCase *tc_core;
-    TCase *tc_limits;
+    TCase *tc_png_through;
+    TCase *tc_jpeg_through;
 
     s = suite_create("Sanitize Image");
 
-    tc_core = tcase_create("png pass through");
+    tc_png_through = tcase_create("png pass through");
 
-    tcase_add_test(tc_core, png_rgb);
-    tcase_add_test(tc_core, png_rgba);
-    tcase_add_test(tc_core, png_grayscale);
-    tcase_add_test(tc_core, png_grayscale_alpha);
-    tcase_add_test(tc_core, png_palette);
-    tcase_add_test(tc_core, png_trns);
+    tcase_add_test(tc_png_through, png_rgb);
+    tcase_add_test(tc_png_through, png_rgba);
+    tcase_add_test(tc_png_through, png_grayscale);
+    tcase_add_test(tc_png_through, png_grayscale_alpha);
+    tcase_add_test(tc_png_through, png_palette);
+    tcase_add_test(tc_png_through, png_trns);
 
-    suite_add_tcase(s, tc_core);
+    suite_add_tcase(s, tc_png_through);
 
-    tc_core = tcase_create("jpeg pass through");
+    tc_jpeg_through = tcase_create("jpeg pass through");
 
-    tcase_add_test(tc_core, jpeg_rgb);
+    tcase_add_test(tc_jpeg_through, jpeg_rgb);
 
-    suite_add_tcase(s, tc_core);
+    suite_add_tcase(s, tc_jpeg_through);
 
     return s;
 }
