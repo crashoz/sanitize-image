@@ -9,7 +9,7 @@
 
 #include <sanitize-image.h>
 
-int png_encode(const char *path, image_t *image)
+int png_encode(const char *path, image_t *image, output_png_options_t options)
 {
     int errorcode = 0;
     int fmt;
@@ -53,6 +53,9 @@ int png_encode(const char *path, image_t *image)
     ihdr.height = image->height;
     ihdr.color_type = color_type_to_png(image->color);
     ihdr.bit_depth = image->bit_depth;
+    ihdr.filter_method = 0;
+    ihdr.interlace_method = options.interlace ? 1 : 0;
+
     size_t length = image->width * image->height * image->channels;
     /* Valid color type, bit depth combinations: https://www.w3.org/TR/2003/REC-PNG-20031110/#table111 */
 
@@ -63,6 +66,9 @@ int png_encode(const char *path, image_t *image)
         errorcode = ERROR_INTERNAL;
         goto error;
     }
+
+    spng_set_option(ctx, SPNG_IMG_COMPRESSION_LEVEL, options.compression_level);
+    spng_set_option(ctx, SPNG_FILTER_CHOICE, options.filter);
 
     if (image->color == COLOR_PALETTE)
     {
@@ -177,7 +183,7 @@ void custom_enc_error_exit(j_common_ptr cinfo)
     longjmp(err->setjmp_buffer, 1);
 }
 
-int jpeg_encode(const char *path, image_t *image, int quality)
+int jpeg_encode(const char *path, image_t *image, output_jpeg_options_t options)
 {
     int errorcode;
     /* This struct contains the JPEG compression parameters and pointers to
@@ -270,6 +276,11 @@ int jpeg_encode(const char *path, image_t *image, int quality)
     cinfo.input_components = 3;            /* # of color components per pixel */
     cinfo.in_color_space = JCS_RGB;        /* colorspace of input image */
     cinfo.data_precision = data_precision; /* data precision of input image */
+
+    cinfo.arith_code = options.arith_code;
+    cinfo.dct_method = options.dct_method;
+    cinfo.optimize_coding = options.optimize;
+    cinfo.smoothing_factor = options.smoothing;
     /* Now use the library's routine to set default compression parameters.
      * (You must set at least cinfo.in_color_space before calling this,
      * since the defaults depend on the source color space.)
@@ -278,7 +289,7 @@ int jpeg_encode(const char *path, image_t *image, int quality)
     /* Now you can set any non-default parameters you wish to.
      * Here we just illustrate the use of quality (quantization table) scaling:
      */
-    jpeg_set_quality(&cinfo, quality, TRUE /* limit to baseline-JPEG values */);
+    jpeg_set_quality(&cinfo, options.quality, TRUE /* limit to baseline-JPEG values */);
     /* Use 4:4:4 subsampling (default is 4:2:0) */
     cinfo.comp_info[0].h_samp_factor = cinfo.comp_info[0].v_samp_factor = 1;
 

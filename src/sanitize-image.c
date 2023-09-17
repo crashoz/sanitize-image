@@ -128,10 +128,10 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     switch (options.output.type)
     {
     case TYPE_PNG:
-        png_encode(full_path, im);
+        png_encode(full_path, im, options.output.png);
         break;
     case TYPE_JPEG:
-        jpeg_encode(full_path, im, options.output.jpeg.quality);
+        jpeg_encode(full_path, im, options.output.jpeg);
         break;
     default:
         break;

@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <spng.h>
+#include <jpeglib.h>
 
 typedef enum
 {
@@ -11,6 +12,16 @@ typedef enum
     TYPE_PNG,
     TYPE_JPEG
 } image_type;
+
+typedef enum
+{
+    COLOR_UNKNOWN,
+    COLOR_GRAYSCALE,
+    COLOR_GRAYSCALE_ALPHA,
+    COLOR_RGB,
+    COLOR_RGBA,
+    COLOR_PALETTE
+} color_type;
 
 typedef struct
 {
@@ -44,13 +55,19 @@ typedef struct
 
 typedef struct
 {
-    enum spng_color_type color_type;
-    int bit_depth;
+    color_type color_type;
+    int compression_level;
+    enum spng_filter_choice filter;
+    bool interlace;
 } output_png_options_t;
 
 typedef struct
 {
     int quality;
+    bool arith_code;
+    J_DCT_METHOD dct_method;
+    bool optimize;
+    int smoothing;
 } output_jpeg_options_t;
 typedef struct
 {
@@ -67,29 +84,19 @@ typedef struct
     output_options_t output;
 } options_t;
 
-typedef enum
-{
-    COLOR_UNKNOWN,
-    COLOR_GRAYSCALE,
-    COLOR_GRAYSCALE_ALPHA,
-    COLOR_RGB,
-    COLOR_RGBA,
-    COLOR_PALETTE
-} color_type;
-
 typedef struct
 {
     color_type color;
-    uint32_t bit_depth;
+    uint32_t bit_depth; // bits per channel
     int channels;
     uint32_t width;
     uint32_t height;
-    unsigned char *data;
+    unsigned char *data; // pixel data
 
     uint32_t palette_len;
-    unsigned char *palette;
+    unsigned char *palette; // for COLOR_PALETTE color mode
     uint32_t trns_len;
-    unsigned char *trns;
+    unsigned char *trns; // transparency settings (png)
 } image_t;
 
 image_type str_to_type(const char *str);
@@ -116,8 +123,8 @@ int is_jpeg(unsigned char *buffer, size_t len);
 int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image);
 int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image);
 
-int png_encode(const char *path, image_t *image);
-int jpeg_encode(const char *path, image_t *image, int quality);
+int png_encode(const char *path, image_t *image, output_png_options_t options);
+int jpeg_encode(const char *path, image_t *image, output_jpeg_options_t options);
 
 int randomize_channels(image_t *image);
 int randomize_channels_keep_trns(image_t *image);

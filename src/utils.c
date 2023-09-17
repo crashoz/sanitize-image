@@ -172,7 +172,9 @@ options_t default_options()
         {{TYPE_PNG, TYPE_JPEG}, 1024, 1024, 1024 * 1024 * 3},
         {RANDOMIZER_AUTO},
         {RESIZER_NONE, 512, 512},
-        {TYPE_JPEG, {}, {90}}};
+        {TYPE_INPUT,
+         {COLOR_UNKNOWN, 9, SPNG_FILTER_CHOICE_ALL, true},
+         {90, false, JDCT_DEFAULT, true, 0}}};
     return options;
 }
 
