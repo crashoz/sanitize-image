@@ -16,7 +16,12 @@ set(LIBCHECK_SOURCE_DIR "${SOURCE_DIR}")
 
 add_executable(test_all tests.c test-utils.c)
 add_dependencies(test_all libcheck)
-
 target_include_directories(test_all PUBLIC "${LIBCHECK_SOURCE_DIR}/src")
 target_link_directories(test_all PUBLIC "${LIBCHECK_BINARY_DIR}/src")
 target_link_libraries(test_all sanitize-image check)
+
+add_executable(make_tests make-tests.c test-utils.c)
+add_dependencies(make_tests libcheck)
+target_include_directories(make_tests PUBLIC "${LIBCHECK_SOURCE_DIR}/src")
+target_link_directories(make_tests PUBLIC "${LIBCHECK_BINARY_DIR}/src")
+target_link_libraries(make_tests sanitize-image check)

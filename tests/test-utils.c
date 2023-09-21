@@ -48,3 +48,12 @@ int test_snapshot(const char *src, const char *snp, options_t options)
     free(dst_buffer);
     free(snp_buffer);
 }
+
+int generate_snapshot(const char *src, const char *dst, options_t options)
+{
+    size_t src_len;
+    unsigned char *src_buffer = load_file(src, &src_len);
+    unsigned char res_path[MAX_PATH];
+
+    sanitize(src_buffer, src_len, TYPE_UNKNOWN, dst, options, res_path, MAX_PATH);
+}

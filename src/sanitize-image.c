@@ -11,7 +11,6 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     image_t *im = NULL;
 
     debug_options(options);
-    // TODO enforce allowed types
 
     // Guess image type with the magic header
     if (input_type == TYPE_UNKNOWN)
