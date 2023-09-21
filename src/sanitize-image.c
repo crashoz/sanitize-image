@@ -26,8 +26,23 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         }
         else
         {
-            return UNKNOWN_IMAGE_TYPE;
+            return ERROR_UNKNOWN_IMAGE_TYPE;
         }
+    }
+
+    // Check if type is allowed
+    int i = 0;
+    for (; i < 8; i++)
+    {
+        if (input_type == options.input.allowed_types[i])
+        {
+            break;
+        }
+    }
+
+    if (i >= 8)
+    {
+        return ERROR_NOT_ALLOWED_TYPE;
     }
 
     // Decode to internal format
@@ -42,7 +57,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         break;
 
     default:
-        return UNKNOWN_IMAGE_TYPE;
+        return ERROR_UNKNOWN_IMAGE_TYPE;
     }
 
     printf("decode ret: %d\n", ret);
@@ -105,10 +120,10 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     // Convert
     image_t *converted_im;
-    // rgb_to_palette(im, &converted_im);
-    // free(im->data);
-    // free(im);
-    // im = converted_im;
+    rgb_to_palette(im, &converted_im);
+    free(im->data);
+    free(im);
+    im = converted_im;
 
     debug_image(im);
 

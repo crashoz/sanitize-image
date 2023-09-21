@@ -37,10 +37,6 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
         goto error;
     }
 
-    /* Encode to internal buffer managed by the library */
-    // spng_set_option(ctx, SPNG_ENCODE_TO_BUFFER, 1);
-    // TODO set compression and options
-
     /* Alternatively you can set an output FILE* or stream with spng_set_png_file() or spng_set_png_stream() */
     if (spng_set_png_file(ctx, png) != 0)
     {

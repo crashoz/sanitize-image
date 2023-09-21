@@ -173,7 +173,7 @@ options_t default_options()
         {RANDOMIZER_AUTO},
         {RESIZER_NONE, 512, 512},
         {TYPE_INPUT,
-         {COLOR_UNKNOWN, 9, SPNG_FILTER_CHOICE_ALL, true},
+         {COLOR_INPUT, 9, SPNG_FILTER_CHOICE_ALL, false},
          {90, false, JDCT_DEFAULT, true, 0}}};
     return options;
 }

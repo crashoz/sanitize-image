@@ -5,6 +5,8 @@
 #include <spng.h>
 #include <jpeglib.h>
 
+#define MAX_ALLOWED_TYPES 8
+
 typedef enum
 {
     TYPE_UNKNOWN,
@@ -16,6 +18,7 @@ typedef enum
 typedef enum
 {
     COLOR_UNKNOWN,
+    COLOR_INPUT,
     COLOR_GRAYSCALE,
     COLOR_GRAYSCALE_ALPHA,
     COLOR_RGB,
@@ -25,7 +28,7 @@ typedef enum
 
 typedef struct
 {
-    image_type allowed_types[8];
+    image_type allowed_types[MAX_ALLOWED_TYPES];
     uint32_t max_width;
     uint32_t max_height;
     size_t max_size;
@@ -149,5 +152,6 @@ int rgb_to_palette(image_t *src, image_t **dst);
 #define ERROR_SET_DEST 8
 #define ERROR_ENCODE 9
 #define ERROR_NOT_SUPPORTED 10
-#define UNKNOWN_IMAGE_TYPE 11
+#define ERROR_UNKNOWN_IMAGE_TYPE 11
 #define ERROR_MISSING_PALETTE 12
+#define ERROR_NOT_ALLOWED_TYPE 13

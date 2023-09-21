@@ -82,6 +82,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     image->bit_depth = ihdr.bit_depth;
     image->color = png_to_color_type(ihdr.color_type);
     image->channels = color_type_to_channels(image->color);
+
     /*
     ? display png header info
     const char *color_name = color_type_str(ihdr.color_type);
@@ -358,7 +359,6 @@ void custom_dec_error_exit(j_common_ptr cinfo)
 
 int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
-    // TODO Handle errors and malicious input
     int errorcode = 0;
     struct jpeg_decompress_struct cinfo;
     struct custom_dec_error_mgr jerr;
