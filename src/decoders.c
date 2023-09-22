@@ -10,6 +10,7 @@
 #include <sanitize-image.h>
 
 // TODO png bKGD chunk
+// TODO handle other bit depths
 
 int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
 {
@@ -82,6 +83,12 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     image->bit_depth = ihdr.bit_depth;
     image->color = png_to_color_type(ihdr.color_type);
     image->channels = color_type_to_channels(image->color);
+
+    if (image->bit_depth != 8)
+    {
+        errorcode = ERROR_NOT_SUPPORTED;
+        goto error;
+    }
 
     /*
     ? display png header info
@@ -439,6 +446,12 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
      * See libjpeg.txt for more info.
      */
 
+    if (cinfo.data_precision != 8)
+    {
+        errorcode = ERROR_NOT_SUPPORTED;
+        goto error;
+    }
+
     //! limits against malicious input
     if (cinfo.image_width > max_width || cinfo.image_height > max_height)
     {
@@ -475,17 +488,9 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
     /* Samples per row in output buffer */
     row_stride = cinfo.output_width * cinfo.output_components;
     /* Make a one-row-high sample array that will go away when done with image */
-    if (cinfo.data_precision == 12)
-    {
-        // TODO error: does not support 12 bit data precision
-        errorcode = ERROR_NOT_SUPPORTED;
-        goto error;
-    }
-    else
-    {
-        out_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
-        image->data = malloc(image->height * row_stride);
-    }
+
+    out_buffer = (*cinfo.mem->alloc_sarray)((j_common_ptr)&cinfo, JPOOL_IMAGE, row_stride, 1);
+    image->data = malloc(image->height * row_stride);
 
     /* Step 6: while (scan lines remain to be read) */
     /*           jpeg_read_scanlines(...); */
