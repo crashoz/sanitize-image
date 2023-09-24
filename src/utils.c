@@ -72,9 +72,9 @@ color_type png_to_color_type(enum spng_color_type color)
     switch (color)
     {
     case SPNG_COLOR_TYPE_GRAYSCALE:
-        return COLOR_GRAYSCALE;
+        return COLOR_GRAY;
     case SPNG_COLOR_TYPE_GRAYSCALE_ALPHA:
-        return COLOR_GRAYSCALE_ALPHA;
+        return COLOR_GRAYA;
     case SPNG_COLOR_TYPE_TRUECOLOR:
         return COLOR_RGB;
     case SPNG_COLOR_TYPE_TRUECOLOR_ALPHA:
@@ -90,9 +90,9 @@ enum spng_color_type color_type_to_png(color_type color)
 {
     switch (color)
     {
-    case COLOR_GRAYSCALE:
+    case COLOR_GRAY:
         return SPNG_COLOR_TYPE_GRAYSCALE;
-    case COLOR_GRAYSCALE_ALPHA:
+    case COLOR_GRAYA:
         return SPNG_COLOR_TYPE_GRAYSCALE_ALPHA;
     case COLOR_RGB:
         return SPNG_COLOR_TYPE_TRUECOLOR;
@@ -109,10 +109,10 @@ const char *color_type_to_str(color_type color)
 {
     switch (color)
     {
-    case COLOR_GRAYSCALE:
-        return "grayscale";
-    case COLOR_GRAYSCALE_ALPHA:
-        return "grayscale alpha";
+    case COLOR_GRAY:
+        return "gray";
+    case COLOR_GRAYA:
+        return "graya";
     case COLOR_RGB:
         return "rgb";
     case COLOR_RGBA:
@@ -126,13 +126,13 @@ const char *color_type_to_str(color_type color)
 
 color_type str_to_color_type(const char *str)
 {
-    if (strcmp(str, "grayscale") == 0)
+    if (strcmp(str, "gray") == 0)
     {
-        return COLOR_GRAYSCALE;
+        return COLOR_GRAY;
     }
-    else if (strcmp(str, "grayscale_alpha") == 0)
+    else if (strcmp(str, "graya") == 0)
     {
-        return COLOR_GRAYSCALE_ALPHA;
+        return COLOR_GRAYA;
     }
     else if (strcmp(str, "rgb") == 0)
     {
@@ -153,9 +153,9 @@ int color_type_to_channels(color_type color)
 {
     switch (color)
     {
-    case COLOR_GRAYSCALE:
+    case COLOR_GRAY:
         return 1;
-    case COLOR_GRAYSCALE_ALPHA:
+    case COLOR_GRAYA:
         return 2;
     case COLOR_RGB:
         return 3;

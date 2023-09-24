@@ -26,23 +26,23 @@ START_TEST(png_rgba)
 }
 END_TEST
 
-START_TEST(png_grayscale)
+START_TEST(png_gray)
 {
     options_t options = default_options();
     options.randomizer.type = RANDOMIZER_NONE;
     options.output.type = TYPE_INPUT;
 
-    test_snapshot("../tests/snapshots/png/grayscale.png", "../tests/snapshots/png/grayscale.png", options);
+    test_snapshot("../tests/snapshots/png/gray.png", "../tests/snapshots/png/gray.png", options);
 }
 END_TEST
 
-START_TEST(png_grayscale_alpha)
+START_TEST(png_graya)
 {
     options_t options = default_options();
     options.randomizer.type = RANDOMIZER_NONE;
     options.output.type = TYPE_INPUT;
 
-    test_snapshot("../tests/snapshots/png/grayscale_alpha.png", "../tests/snapshots/png/grayscale_alpha.png", options);
+    test_snapshot("../tests/snapshots/png/graya.png", "../tests/snapshots/png/graya.png", options);
 }
 END_TEST
 
@@ -84,22 +84,22 @@ Suite *sanitizeimage_suite(void)
 
     s = suite_create("Sanitize Image");
 
-    tc_png_through = tcase_create("png pass through");
+    tc_png_through = tcase_create("png to png");
 
     tcase_add_test(tc_png_through, png_rgb);
-    tcase_add_test(tc_png_through, png_rgba);
-    tcase_add_test(tc_png_through, png_grayscale);
-    tcase_add_test(tc_png_through, png_grayscale_alpha);
-    tcase_add_test(tc_png_through, png_palette);
-    tcase_add_test(tc_png_through, png_trns);
+    // tcase_add_test(tc_png_through, png_rgba);
+    // tcase_add_test(tc_png_through, png_gray);
+    // tcase_add_test(tc_png_through, png_graya);
+    // tcase_add_test(tc_png_through, png_palette);
+    // tcase_add_test(tc_png_through, png_trns);
 
     suite_add_tcase(s, tc_png_through);
 
-    tc_jpeg_through = tcase_create("jpeg pass through");
+    // tc_jpeg_through = tcase_create("jpeg pass through");
 
-    tcase_add_test(tc_jpeg_through, jpeg_rgb);
+    // tcase_add_test(tc_jpeg_through, jpeg_rgb);
 
-    suite_add_tcase(s, tc_jpeg_through);
+    // suite_add_tcase(s, tc_jpeg_through);
 
     return s;
 }

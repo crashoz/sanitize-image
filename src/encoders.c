@@ -92,7 +92,7 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
 
         switch (image->color)
         {
-        case COLOR_GRAYSCALE:
+        case COLOR_GRAY:
             trns.gray = *(uint16_t *)(image->trns);
             break;
         case COLOR_RGB:

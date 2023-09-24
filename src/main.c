@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 
     unsigned char *buffer = malloc(BUFFER_SIZE);
     FILE *f;
-    f = fopen("../../lenna.png", "rb");
+    f = fopen("../../tests/snapshots/gray.png", "rb");
 
     int n = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, f);
     buffer[n] = '\0';

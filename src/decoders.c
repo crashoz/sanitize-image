@@ -222,7 +222,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     {
         switch (image->color)
         {
-        case COLOR_GRAYSCALE:
+        case COLOR_GRAY:
             image->trns_len = 1;
             image->trns = malloc(2);
             if (image->trns == NULL)

@@ -19,8 +19,8 @@ typedef enum
 {
     COLOR_UNKNOWN,
     COLOR_INPUT,
-    COLOR_GRAYSCALE,
-    COLOR_GRAYSCALE_ALPHA,
+    COLOR_GRAY,
+    COLOR_GRAYA,
     COLOR_RGB,
     COLOR_RGBA,
     COLOR_PALETTE
@@ -137,9 +137,11 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
 
 int rgb_to_rgba(image_t *src, image_t **dst);
-int rgb_to_grayscale(image_t *src, image_t **dst);
-int rgb_to_grayscale_alpha(image_t *src, image_t **dst);
+int rgb_to_gray(image_t *src, image_t **dst);
+int rgb_to_graya(image_t *src, image_t **dst);
 int rgb_to_palette(image_t *src, image_t **dst);
+
+int gray_to_graya(image_t *src, image_t **dst);
 
 #define SUCCESS 0
 #define ERROR_OUT_OF_MEMORY 1
