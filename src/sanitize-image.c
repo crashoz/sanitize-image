@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sanitize-image.h>
 #include <quantizers.h>
+#include <converters.h>
 
 #define MAX_PATH_LEN 4096
 

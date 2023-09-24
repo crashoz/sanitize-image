@@ -136,13 +136,6 @@ int randomize_palette(image_t *image);
 int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type);
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
 
-int rgb_to_rgba(image_t *src, image_t **dst);
-int rgb_to_gray(image_t *src, image_t **dst);
-int rgb_to_graya(image_t *src, image_t **dst);
-int rgb_to_palette(image_t *src, image_t **dst);
-
-int gray_to_graya(image_t *src, image_t **dst);
-
 #define SUCCESS 0
 #define ERROR_OUT_OF_MEMORY 1
 #define ERROR_OPENING_FILE 2

@@ -1,12 +1,123 @@
 #include <sanitize-image.h>
 #include <quantizers.h>
+#include <converters.h>
 
 const uint32_t x = 313524;
 const uint32_t y = 615514;
 const uint32_t z = 119537;
 const uint32_t k = 1048576;
 
-int rgb_to_rgba(image_t *src, image_t **dst)
+const uint8_t bg = 255;
+
+uint8_t apply_alpha(uint8_t c, uint8_t alpha)
+{
+    return (alpha * c + (255 - alpha) * bg) / 256;
+}
+
+uint8_t grayscalize(uint8_t r, uint8_t g, uint8_t b)
+{
+    return (r * x + g * y + b * z) / k;
+}
+
+// TODO test all
+
+/* GRAY */
+
+int gray_to_graya(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_GRAYA;
+    im->bit_depth = 8;
+    im->channels = 2;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    if (src->trns_len == 0)
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 2] = src->data[i];
+            im->data[i * 2 + 1] = 255;
+        }
+    }
+    else
+    {
+        unsigned char transparent = *((uint16_t *)(im->trns));
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 2] = src->data[i];
+
+            if (src->data[i] == transparent)
+            {
+                im->data[i * 2 + 1] = 0;
+            }
+            else
+            {
+                im->data[i * 2 + 1] = 255;
+            }
+        }
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int gray_to_rgb(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_RGB;
+    im->bit_depth = 8;
+    im->channels = 3;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < src->width * src->height; i++)
+    {
+
+        im->data[i * 3] = src->data[i];
+        im->data[i * 3 + 1] = src->data[i];
+        im->data[i * 3 + 2] = src->data[i];
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int gray_to_rgba(image_t *src, image_t **dst)
 {
     image_t *im = malloc(sizeof(image_t));
     if (im == NULL)
@@ -25,7 +136,83 @@ int rgb_to_rgba(image_t *src, image_t **dst)
     im->trns_len = 0;
     im->trns = NULL;
 
-    im->data = malloc(src->width * src->height * 4);
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    if (src->trns_len == 0)
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 4] = src->data[i];
+            im->data[i * 4 + 1] = src->data[i];
+            im->data[i * 4 + 2] = src->data[i];
+            im->data[i * 4 + 3] = 255;
+        }
+    }
+    else
+    {
+        unsigned char transparent = *((uint16_t *)(im->trns));
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 4] = src->data[i];
+            im->data[i * 4 + 1] = src->data[i];
+            im->data[i * 4 + 2] = src->data[i];
+
+            if (src->data[i] == transparent)
+            {
+                im->data[i * 4 + 3] = 0;
+            }
+            else
+            {
+                im->data[i * 4 + 3] = 255;
+            }
+        }
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int gray_to_palette(image_t *src, image_t **dst)
+{
+    int ret;
+    image_t *im_rgb;
+
+    ret = gray_to_rgb(src, &im_rgb);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    return rgb_to_palette(im_rgb, dst);
+}
+
+/* GRAYA */
+
+int graya_to_gray(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_GRAY;
+    im->bit_depth = 8;
+    im->channels = 1;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
         return ERROR_OUT_OF_MEMORY;
@@ -33,16 +220,106 @@ int rgb_to_rgba(image_t *src, image_t **dst)
 
     for (int i = 0; i < src->width * src->height; i++)
     {
-        im->data[i * 4] = src->data[i * 3];
-        im->data[i * 4 + 1] = src->data[i * 3 + 1];
-        im->data[i * 4 + 2] = src->data[i * 3 + 2];
-        im->data[i * 4 + 3] = 255;
+        uint8_t color = apply_alpha(src->data[i * 2], src->data[i * 2 + 1]);
+        im->data[i] = color;
     }
 
     *dst = im;
 
     return SUCCESS;
 }
+
+int graya_to_rgb(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_RGB;
+    im->bit_depth = 8;
+    im->channels = 3;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < src->width * src->height; i++)
+    {
+        uint8_t color = apply_alpha(src->data[i * 2], src->data[i * 2 + 1]);
+        im->data[i * 3] = color;
+        im->data[i * 3 + 1] = color;
+        im->data[i * 3 + 2] = color;
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int graya_to_rgba(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_RGBA;
+    im->bit_depth = 8;
+    im->channels = 4;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < src->width * src->height; i++)
+    {
+        im->data[i * 3] = src->data[i * 2];
+        im->data[i * 3 + 1] = src->data[i * 2];
+        im->data[i * 3 + 2] = src->data[i * 2];
+        im->data[i * 3 + 3] = src->data[i * 2 + 1];
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int graya_to_palette(image_t *src, image_t **dst)
+{
+    int ret;
+    image_t *im_rgb;
+
+    ret = graya_to_rgb(src, &im_rgb);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    return rgb_to_palette(im_rgb, dst);
+}
+
+/* RGB */
 
 int rgb_to_gray(image_t *src, image_t **dst)
 {
@@ -63,7 +340,7 @@ int rgb_to_gray(image_t *src, image_t **dst)
     im->trns_len = 0;
     im->trns = NULL;
 
-    im->data = malloc(src->width * src->height * 1);
+    im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
         return ERROR_OUT_OF_MEMORY;
@@ -72,7 +349,7 @@ int rgb_to_gray(image_t *src, image_t **dst)
     for (int i = 0; i < src->width * src->height; i++)
     {
 
-        im->data[i] = (src->data[i * 3] * x + src->data[i * 3 + 1] * y + src->data[i * 3 + 2] * z) / k;
+        im->data[i] = grayscalize(src->data[i * 3], src->data[i * 3 + 1], src->data[i * 3 + 2]);
     }
 
     *dst = im;
@@ -99,7 +376,7 @@ int rgb_to_graya(image_t *src, image_t **dst)
     im->trns_len = 0;
     im->trns = NULL;
 
-    im->data = malloc(src->width * src->height * 2);
+    im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
         return ERROR_OUT_OF_MEMORY;
@@ -108,8 +385,70 @@ int rgb_to_graya(image_t *src, image_t **dst)
     for (int i = 0; i < src->width * src->height; i++)
     {
 
-        im->data[i * 2] = (src->data[i * 3] * x + src->data[i * 3 + 1] * y + src->data[i * 3 + 2] * z) / k;
-        im->data[i * 2 + 1] = 128;
+        im->data[i * 2] = grayscalize(src->data[i * 3], src->data[i * 3 + 1], src->data[i * 3 + 2]);
+        im->data[i * 2 + 1] = 255;
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int rgb_to_rgba(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_RGBA;
+    im->bit_depth = 8;
+    im->channels = 4;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    if (src->trns_len == 0)
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 4] = src->data[i * 3];
+            im->data[i * 4 + 1] = src->data[i * 3 + 1];
+            im->data[i * 4 + 2] = src->data[i * 3 + 2];
+            im->data[i * 4 + 3] = 255;
+        }
+    }
+    else
+    {
+        uint8_t transparent_r = *((uint16_t *)(src->trns));
+        uint8_t transparent_g = *((uint16_t *)(src->trns) + 1);
+        uint8_t transparent_b = *((uint16_t *)(src->trns) + 2);
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 4] = src->data[i * 3];
+            im->data[i * 4 + 1] = src->data[i * 3 + 1];
+            im->data[i * 4 + 2] = src->data[i * 3 + 2];
+
+            if (src->data[i * 3] == transparent_r && src->data[i * 3 + 1] == transparent_g && src->data[i * 3 + 2] == transparent_b)
+            {
+                im->data[i * 4 + 3] = 0;
+            }
+            else
+            {
+                im->data[i * 4 + 3] = 255;
+            }
+        }
     }
 
     *dst = im;
@@ -189,6 +528,82 @@ int rgb_to_palette(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
+/* RGBA */
+
+int rgba_to_gray(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_GRAY;
+    im->bit_depth = 8;
+    im->channels = 1;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < src->width * src->height; i++)
+    {
+        uint8_t r = apply_alpha(src->data[i * 4], src->data[i * 4 + 3]);
+        uint8_t g = apply_alpha(src->data[i * 4 + 1], src->data[i * 4 + 3]);
+        uint8_t b = apply_alpha(src->data[i * 4 + 2], src->data[i * 4 + 3]);
+        im->data[i] = grayscalize(r, g, b);
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int rgba_to_graya(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_GRAYA;
+    im->bit_depth = 8;
+    im->channels = 2;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    for (int i = 0; i < src->width * src->height; i++)
+    {
+        im->data[i * 2] = grayscalize(src->data[i * 4], src->data[i * 4 + 1], src->data[i * 4 + 2]);
+        im->data[i * 2 + 1] = src->data[i * 4 + 3];
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
 int rgba_to_rgb(image_t *src, image_t **dst)
 {
     image_t *im = malloc(sizeof(image_t));
@@ -208,19 +623,17 @@ int rgba_to_rgb(image_t *src, image_t **dst)
     im->trns_len = 0;
     im->trns = NULL;
 
-    im->data = malloc(src->width * src->height * 3);
+    im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
         return ERROR_OUT_OF_MEMORY;
     }
 
-    const uint8_t bg = 255;
-
     for (int i = 0; i < src->width * src->height; i++)
     {
-        im->data[i * 3] = (src->data[i * 4 + 3] * src->data[i * 4] + (255 - src->data[i * 4 + 3]) * bg) / 256;
-        im->data[i * 3 + 1] = (src->data[i * 4 + 3] * src->data[i * 4 + 1] + (255 - src->data[i * 4 + 3]) * bg) / 256;
-        im->data[i * 3 + 2] = (src->data[i * 4 + 3] * src->data[i * 4 + 2] + (255 - src->data[i * 4 + 3]) * bg) / 256;
+        im->data[i * 3] = apply_alpha(src->data[i * 4], src->data[i * 4 + 3]);
+        im->data[i * 3 + 1] = apply_alpha(src->data[i * 4 + 1], src->data[i * 4 + 3]);
+        im->data[i * 3 + 2] = apply_alpha(src->data[i * 4 + 2], src->data[i * 4 + 3]);
     }
 
     *dst = im;
@@ -228,7 +641,23 @@ int rgba_to_rgb(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int gray_to_rgb(image_t *src, image_t **dst)
+int rgba_to_palette(image_t *src, image_t **dst)
+{
+    int ret;
+    image_t *im_rgb;
+
+    ret = rgba_to_rgb(src, &im_rgb);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    return rgb_to_palette(im_rgb, dst);
+}
+
+/* PALETTE */
+
+int palette_to_gray(image_t *src, image_t **dst)
 {
     image_t *im = malloc(sizeof(image_t));
     if (im == NULL)
@@ -236,9 +665,9 @@ int gray_to_rgb(image_t *src, image_t **dst)
         return ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGB;
+    im->color = COLOR_GRAY;
     im->bit_depth = 8;
-    im->channels = 3;
+    im->channels = 1;
     im->width = src->width;
     im->height = src->height;
     im->data = NULL;
@@ -247,18 +676,31 @@ int gray_to_rgb(image_t *src, image_t **dst)
     im->trns_len = 0;
     im->trns = NULL;
 
-    im->data = malloc(src->width * src->height * 3);
+    im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
         return ERROR_OUT_OF_MEMORY;
     }
 
-    for (int i = 0; i < src->width * src->height; i++)
+    if (src->trns == 0)
     {
-
-        im->data[i * 3] = src->data[i];
-        im->data[i * 3 + 1] = src->data[i];
-        im->data[i * 3 + 2] = src->data[i];
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i] = grayscalize(
+                src->palette[src->data[i] * 3],
+                src->palette[src->data[i] * 3 + 1],
+                src->palette[src->data[i] * 3 + 2]);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            uint8_t r = apply_alpha(src->palette[src->data[i] * 3], src->trns[src->data[i]]);
+            uint8_t g = apply_alpha(src->palette[src->data[i] * 3 + 1], src->trns[src->data[i]]);
+            uint8_t b = apply_alpha(src->palette[src->data[i] * 3 + 2], src->trns[src->data[i]]);
+            im->data[i] = grayscalize(r, g, b);
+        }
     }
 
     *dst = im;
@@ -266,89 +708,8 @@ int gray_to_rgb(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int graya_to_rgb(image_t *src, image_t **dst)
+int palette_to_graya(image_t *src, image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
-    if (im == NULL)
-    {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    im->color = COLOR_RGB;
-    im->bit_depth = 8;
-    im->channels = 3;
-    im->width = src->width;
-    im->height = src->height;
-    im->data = NULL;
-    im->palette_len = 0;
-    im->palette = NULL;
-    im->trns_len = 0;
-    im->trns = NULL;
-
-    im->data = malloc(src->width * src->height * 3);
-    if (im->data == NULL)
-    {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    const uint8_t bg = 255;
-
-    for (int i = 0; i < src->width * src->height; i++)
-    {
-        uint8_t color = (src->data[i * 2 + 1] * src->data[i * 2] + (255 - src->data[i * 2 + 1]) * bg) / 256;
-        im->data[i * 3] = color;
-        im->data[i * 3 + 1] = color;
-        im->data[i * 3 + 2] = color;
-    }
-
-    *dst = im;
-
-    return SUCCESS;
-}
-
-int palette_to_rgb(image_t *src, image_t **dst)
-{
-    image_t *im = malloc(sizeof(image_t));
-    if (im == NULL)
-    {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    im->color = COLOR_RGB;
-    im->bit_depth = 8;
-    im->channels = 3;
-    im->width = src->width;
-    im->height = src->height;
-    im->data = NULL;
-    im->palette_len = 0;
-    im->palette = NULL;
-    im->trns_len = 0;
-    im->trns = NULL;
-
-    im->data = malloc(src->width * src->height * 3);
-    if (im->data == NULL)
-    {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    for (int i = 0; i < src->width * src->height; i++)
-    {
-
-        im->data[i * 3] = src->palette[src->data[i] * 3];
-        im->data[i * 3 + 1] = src->palette[src->data[i] * 3 + 1];
-        im->data[i * 3 + 2] = src->palette[src->data[i] * 3 + 2];
-    }
-
-    *dst = im;
-
-    return SUCCESS;
-}
-
-// TODO all convertions!
-
-int gray_to_graya(image_t *src, image_t **dst)
-{
-    // TODO test trns
     image_t *im = malloc(sizeof(image_t));
     if (im == NULL)
     {
@@ -376,25 +737,122 @@ int gray_to_graya(image_t *src, image_t **dst)
     {
         for (int i = 0; i < src->width * src->height; i++)
         {
-            im->data[i * 2] = src->data[i];
+            im->data[i * 2] = grayscalize(
+                src->palette[src->data[i] * 3],
+                src->palette[src->data[i] * 3 + 1],
+                src->palette[src->data[i] * 3 + 2]);
             im->data[i * 2 + 1] = 255;
         }
     }
     else
     {
-        unsigned char transparent = *((uint16_t *)(im->trns));
         for (int i = 0; i < src->width * src->height; i++)
         {
-            im->data[i * 2] = src->data[i];
+            im->data[i * 2] = grayscalize(
+                src->palette[src->data[i] * 3],
+                src->palette[src->data[i] * 3 + 1],
+                src->palette[src->data[i] * 3 + 2]);
+            im->data[i * 2 + 1] = src->trns[src->data[i]];
+        }
+    }
 
-            if (src->data[i] == transparent)
-            {
-                im->data[i * 2 + 1] = 0;
-            }
-            else
-            {
-                im->data[i * 2 + 1] = 255;
-            }
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int palette_to_rgb(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_RGB;
+    im->bit_depth = 8;
+    im->channels = 3;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    if (src->trns == 0)
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 3] = src->palette[src->data[i] * 3];
+            im->data[i * 3 + 1] = src->palette[src->data[i] * 3 + 1];
+            im->data[i * 3 + 2] = src->palette[src->data[i] * 3 + 2];
+        }
+    }
+    else
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 3] = apply_alpha(src->palette[src->data[i] * 3], src->trns[src->data[i]]);
+            im->data[i * 3 + 1] = apply_alpha(src->palette[src->data[i] * 3 + 1], src->trns[src->data[i]]);
+            im->data[i * 3 + 2] = apply_alpha(src->palette[src->data[i] * 3 + 2], src->trns[src->data[i]]);
+        }
+    }
+
+    *dst = im;
+
+    return SUCCESS;
+}
+
+int palette_to_rgba(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im->color = COLOR_RGBA;
+    im->bit_depth = 8;
+    im->channels = 4;
+    im->width = src->width;
+    im->height = src->height;
+    im->data = NULL;
+    im->palette_len = 0;
+    im->palette = NULL;
+    im->trns_len = 0;
+    im->trns = NULL;
+
+    im->data = malloc(src->width * src->height * im->channels);
+    if (im->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    if (src->trns == 0)
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 4] = src->palette[src->data[i] * 3];
+            im->data[i * 4 + 1] = src->palette[src->data[i] * 3 + 1];
+            im->data[i * 4 + 2] = src->palette[src->data[i] * 3 + 2];
+            im->data[i * 4 + 3] = 255;
+        }
+    }
+    else
+    {
+        for (int i = 0; i < src->width * src->height; i++)
+        {
+            im->data[i * 4] = src->palette[src->data[i] * 3];
+            im->data[i * 4 + 1] = src->palette[src->data[i] * 3 + 1];
+            im->data[i * 4 + 2] = src->palette[src->data[i] * 3 + 2];
+            im->data[i * 4 + 3] = src->trns[src->data[i]];
         }
     }
 
