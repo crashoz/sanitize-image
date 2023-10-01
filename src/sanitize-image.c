@@ -45,6 +45,12 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         return ERROR_NOT_ALLOWED_TYPE;
     }
 
+    // Set output type
+    if (options.output.type == TYPE_INPUT)
+    {
+        options.output.type = input_type;
+    }
+
     // Decode to internal format
     switch (input_type)
     {
@@ -119,20 +125,44 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     }
 
     // Convert
-    image_t *converted_im;
-    gray_to_graya(im, &converted_im);
-    free(im->data);
-    free(im);
-    im = converted_im;
+    color_type output_color;
+    switch (options.output.type)
+    {
+    case TYPE_PNG:
+        if (options.output.png.color_type == TYPE_INPUT)
+        {
+            output_color = im->color;
+        }
+        else
+        {
+            output_color = options.output.png.color_type;
+        }
+        break;
+
+    case TYPE_JPEG:
+        output_color = COLOR_RGB;
+        break;
+    default:
+        return ERROR_NOT_SUPPORTED;
+    }
+
+    if (im->color != output_color)
+    {
+        image_t *converted_im;
+        ret = convert_map[im->color][output_color](im, &converted_im);
+        if (ret != 0)
+        {
+            return ret;
+        }
+
+        free(im->data);
+        free(im);
+        im = converted_im;
+    }
 
     debug_image(im);
 
     // Encode to output file
-    if (options.output.type == TYPE_INPUT)
-    {
-        options.output.type = input_type;
-    }
-
     char full_path[MAX_PATH_LEN];
     strncpy(full_path, path, MAX_PATH_LEN - 8);
 

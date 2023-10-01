@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include <sanitize-image.h>
+#include <converters.h>
 #include <spng.h>
 
 #define BUFFER_SIZE 1024 * 1024 * 3
@@ -10,9 +11,12 @@ int main(int argc, char **argv)
 {
     srand(1);
 
+    init_convert_map();
+
     unsigned char *buffer = malloc(BUFFER_SIZE);
     FILE *f;
     f = fopen("../../tests/snapshots/gray.png", "rb");
+    // f = fopen("../../grayrgb.png", "rb");
 
     int n = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, f);
     buffer[n] = '\0';

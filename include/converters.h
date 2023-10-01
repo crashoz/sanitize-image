@@ -2,6 +2,14 @@
 
 #include <stdint.h>
 
+typedef int (*convert_fn)(image_t *, image_t **);
+
+extern convert_fn convert_map[5][5];
+
+void init_convert_map();
+
+int identity(image_t *src, image_t **dst);
+
 int gray_to_graya(image_t *src, image_t **dst);
 int gray_to_rgb(image_t *src, image_t **dst);
 int gray_to_rgba(image_t *src, image_t **dst);

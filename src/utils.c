@@ -186,6 +186,33 @@ void im_shallow_copy(image_t *src, image_t *dst)
     dst->trns = NULL;
 }
 
+void im_deep_copy(image_t *src, image_t *dst)
+{
+    memcpy(dst, src, sizeof(image_t));
+    dst->data = malloc(src->width * src->height * src->channels);
+    memcpy(dst->data, src->data, src->width * src->height * src->channels);
+
+    if (src->palette_len > 0)
+    {
+        dst->palette = malloc(src->palette_len * 3);
+        memcpy(dst->palette, src->palette, src->palette_len * 3);
+    }
+
+    if (src->trns_len > 0)
+    {
+        if (src->trns_len <= 3)
+        {
+            dst->trns = malloc(src->trns_len * 2);
+            memcpy(dst->trns, src->trns, src->trns_len * 2);
+        }
+        else
+        {
+            dst->trns = malloc(src->trns_len);
+            memcpy(dst->trns, src->trns, src->trns_len);
+        }
+    }
+}
+
 void debug_options(options_t options)
 {
     printf("input:\n");

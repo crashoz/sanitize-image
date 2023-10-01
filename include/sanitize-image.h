@@ -112,6 +112,7 @@ const char *color_type_to_str(color_type color);
 color_type str_to_color_type(const char *str);
 
 void im_shallow_copy(image_t *src, image_t *dst);
+void im_deep_copy(image_t *src, image_t *dst);
 
 void debug_options(options_t options);
 void debug_image(image_t *im);

@@ -19,7 +19,54 @@ uint8_t grayscalize(uint8_t r, uint8_t g, uint8_t b)
     return (r * x + g * y + b * z) / k;
 }
 
+convert_fn convert_map[5][5];
+
+void init_convert_map()
+{
+    convert_map[COLOR_GRAY][COLOR_GRAY] = &identity;
+    convert_map[COLOR_GRAY][COLOR_GRAYA] = &gray_to_graya;
+    convert_map[COLOR_GRAY][COLOR_RGB] = &gray_to_rgb;
+    convert_map[COLOR_GRAY][COLOR_RGBA] = &gray_to_rgba;
+    convert_map[COLOR_GRAY][COLOR_PALETTE] = &gray_to_palette;
+
+    convert_map[COLOR_GRAYA][COLOR_GRAY] = &graya_to_gray;
+    convert_map[COLOR_GRAYA][COLOR_GRAYA] = &identity;
+    convert_map[COLOR_GRAYA][COLOR_RGB] = &graya_to_rgb;
+    convert_map[COLOR_GRAYA][COLOR_RGBA] = &graya_to_rgba;
+    convert_map[COLOR_GRAYA][COLOR_PALETTE] = &graya_to_palette;
+
+    convert_map[COLOR_RGB][COLOR_GRAY] = &rgb_to_gray;
+    convert_map[COLOR_RGB][COLOR_GRAYA] = &rgb_to_graya;
+    convert_map[COLOR_RGB][COLOR_RGB] = &identity;
+    convert_map[COLOR_RGB][COLOR_RGBA] = &rgb_to_rgba;
+    convert_map[COLOR_RGB][COLOR_PALETTE] = &rgb_to_palette;
+
+    convert_map[COLOR_RGBA][COLOR_GRAY] = &rgba_to_gray;
+    convert_map[COLOR_RGBA][COLOR_GRAYA] = &rgba_to_graya;
+    convert_map[COLOR_RGBA][COLOR_RGB] = &rgba_to_rgb;
+    convert_map[COLOR_RGBA][COLOR_RGBA] = &identity;
+    convert_map[COLOR_RGBA][COLOR_PALETTE] = &rgba_to_palette;
+
+    convert_map[COLOR_PALETTE][COLOR_GRAY] = &palette_to_gray;
+    convert_map[COLOR_PALETTE][COLOR_GRAYA] = &palette_to_graya;
+    convert_map[COLOR_PALETTE][COLOR_RGB] = &palette_to_rgb;
+    convert_map[COLOR_PALETTE][COLOR_RGBA] = &palette_to_rgba;
+    convert_map[COLOR_PALETTE][COLOR_PALETTE] = &identity;
+}
+
 // TODO test all
+
+int identity(image_t *src, image_t **dst)
+{
+    image_t *im = malloc(sizeof(image_t));
+    if (im == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im_deep_copy(src, im);
+    *dst = im;
+}
 
 /* GRAY */
 

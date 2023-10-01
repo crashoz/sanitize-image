@@ -268,7 +268,7 @@ void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigne
         uint8_t b = image->data[k * 3 + 2];
 
         node = octree;
-        for (int i = 0; i < 8; i++)
+        for (int i = 0; i < 9; i++)
         {
             int idx = (((r >> (7 - i)) & 0x01) << 2) | (((g >> (7 - i)) & 0x01) << 1) | (((b >> (7 - i)) & 0x01));
 
