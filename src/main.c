@@ -15,8 +15,8 @@ int main(int argc, char **argv)
 
     unsigned char *buffer = malloc(BUFFER_SIZE);
     FILE *f;
-    f = fopen("../../tests/snapshots/gray.png", "rb");
-    // f = fopen("../../grayrgb.png", "rb");
+    f = fopen("../../tests/snapshots/rgb.png", "rb");
+    // f = fopen("../../rgb.png", "rb");
 
     int n = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, f);
     buffer[n] = '\0';
@@ -26,8 +26,9 @@ int main(int argc, char **argv)
     printf("size: %d\n", n);
 
     options_t options = default_options();
+    options.randomizer.type = RANDOMIZER_NONE;
     options.output.type = TYPE_PNG;
-    options.output.png.color_type = COLOR_PALETTE;
+    options.output.png.color_type = COLOR_RGB;
     char res_path[4096];
     int ret = sanitize(buffer, n, TYPE_UNKNOWN, "../../new", options, res_path, 4096);
 

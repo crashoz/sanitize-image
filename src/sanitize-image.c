@@ -66,8 +66,6 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         return ERROR_UNKNOWN_IMAGE_TYPE;
     }
 
-    printf("decode ret: %d\n", ret);
-
     if (ret != 0)
     {
         if (im != NULL)
@@ -148,6 +146,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     if (im->color != output_color)
     {
+        printf("convert %s -> %s\n", color_type_to_str(im->color), color_type_to_str(output_color));
         image_t *converted_im;
         ret = convert_map[im->color][output_color](im, &converted_im);
         if (ret != 0)
@@ -159,6 +158,12 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         free(im);
         im = converted_im;
     }
+
+    // im->trns_len = 3;
+    // im->trns = malloc(3 * sizeof(uint16_t));
+    // *((uint16_t *)(im->trns) + 0) = 205;
+    // *((uint16_t *)(im->trns) + 1) = 95;
+    // *((uint16_t *)(im->trns) + 2) = 96;
 
     debug_image(im);
 

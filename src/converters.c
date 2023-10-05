@@ -72,6 +72,7 @@ int identity(image_t *src, image_t **dst)
 
 int gray_to_graya(image_t *src, image_t **dst)
 {
+    printf("is here!\n");
     image_t *im = malloc(sizeof(image_t));
     if (im == NULL)
     {

@@ -111,6 +111,7 @@ int main(void)
     SRunner *sr;
 
     srand(1);
+    init_convert_map();
 
     s = sanitizeimage_suite();
     sr = srunner_create(s);

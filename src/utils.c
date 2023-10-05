@@ -244,8 +244,17 @@ void debug_options(options_t options)
 
     printf("output:\n");
     printf("\ttype: %d\n", options.output.type);
+    printf("\tpng:\n");
+    printf("\t\tcolor: %s\n", color_type_to_str(options.output.png.color_type));
+    printf("\t\tcompression: %d\n", options.output.png.compression_level);
+    printf("\t\tfilter: %d\n", options.output.png.filter);
+    printf("\t\tinterlace: %d\n", options.output.png.interlace);
     printf("\tjpeg:\n");
     printf("\t\tquality: %d\n", options.output.jpeg.quality);
+    printf("\t\tarith_code: %d\n", options.output.jpeg.arith_code);
+    printf("\t\tdct_method: %d\n", options.output.jpeg.dct_method);
+    printf("\t\toptimize: %d\n", options.output.jpeg.optimize);
+    printf("\t\tsmoothing: %d\n", options.output.jpeg.smoothing);
     printf("\n");
 }
 

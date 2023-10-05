@@ -6,6 +6,23 @@
 
 #include "tests-utils.h"
 
+// https://stackoverflow.com/a/68695871/22471816
+int copy_file(const char *in_path, const char *out_path)
+{
+    size_t n;
+    FILE *in = NULL, *out = NULL;
+    char *buf = calloc(BUFFER_SIZE, 1);
+    if ((in = fopen(in_path, "rb")) && (out = fopen(out_path, "wb")))
+        while ((n = fread(buf, 1, BUFFER_SIZE, in)) && fwrite(buf, 1, n, out))
+            ;
+    free(buf);
+    if (in)
+        fclose(in);
+    if (out)
+        fclose(out);
+    return EXIT_SUCCESS;
+}
+
 unsigned char *load_file(const char *path, size_t *len)
 {
     unsigned char *buffer = malloc(BUFFER_SIZE);
