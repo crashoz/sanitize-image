@@ -7,7 +7,7 @@ const uint32_t y = 615514;
 const uint32_t z = 119537;
 const uint32_t k = 1048576;
 
-const uint8_t bg = 255;
+const uint8_t bg = 0;
 
 uint8_t apply_alpha(uint8_t c, uint8_t alpha)
 {
@@ -236,7 +236,9 @@ int gray_to_palette(image_t *src, image_t **dst)
         return ret;
     }
 
-    return rgb_to_palette(im_rgb, dst);
+    ret = rgb_to_palette(im_rgb, dst);
+    destroy_image(im_rgb);
+    return ret;
 }
 
 /* GRAYA */
@@ -342,10 +344,10 @@ int graya_to_rgba(image_t *src, image_t **dst)
 
     for (int i = 0; i < src->width * src->height; i++)
     {
-        im->data[i * 3] = src->data[i * 2];
-        im->data[i * 3 + 1] = src->data[i * 2];
-        im->data[i * 3 + 2] = src->data[i * 2];
-        im->data[i * 3 + 3] = src->data[i * 2 + 1];
+        im->data[i * 4] = src->data[i * 2];
+        im->data[i * 4 + 1] = src->data[i * 2];
+        im->data[i * 4 + 2] = src->data[i * 2];
+        im->data[i * 4 + 3] = src->data[i * 2 + 1];
     }
 
     *dst = im;
@@ -364,7 +366,9 @@ int graya_to_palette(image_t *src, image_t **dst)
         return ret;
     }
 
-    return rgb_to_palette(im_rgb, dst);
+    ret = rgb_to_palette(im_rgb, dst);
+    destroy_image(im_rgb);
+    return ret;
 }
 
 /* RGB */
@@ -700,7 +704,9 @@ int rgba_to_palette(image_t *src, image_t **dst)
         return ret;
     }
 
-    return rgb_to_palette(im_rgb, dst);
+    ret = rgb_to_palette(im_rgb, dst);
+    destroy_image(im_rgb);
+    return ret;
 }
 
 /* PALETTE */

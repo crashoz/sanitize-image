@@ -2,6 +2,14 @@
 #include <string.h>
 #include <sanitize-image.h>
 
+void destroy_image(image_t *im)
+{
+    free(im->data);
+    free(im->palette);
+    free(im->trns);
+    free(im);
+}
+
 image_type str_to_type(const char *str)
 {
     if (strcmp(str, "png") == 0)

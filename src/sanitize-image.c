@@ -70,8 +70,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     {
         if (im != NULL)
         {
-            free(im->data);
-            free(im);
+            destroy_image(im);
         }
         return ret;
     }
@@ -107,8 +106,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     if (ret != 0)
     {
-        free(im->data);
-        free(im);
+        destroy_image(im);
         return ret;
     }
 
@@ -117,8 +115,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     resize(im, &resized_im, options.resizer.width, options.resizer.height, options.resizer.type);
     if (im != resized_im)
     {
-        free(im->data);
-        free(im);
+        destroy_image(im);
         im = resized_im;
     }
 
@@ -154,8 +151,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
             return ret;
         }
 
-        free(im->data);
-        free(im);
+        destroy_image(im);
         im = converted_im;
     }
 
@@ -189,6 +185,5 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     strncpy(res_path, full_path, res_path_len);
 
-    free(im->data);
-    free(im);
+    destroy_image(im);
 }

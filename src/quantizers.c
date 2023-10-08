@@ -179,6 +179,8 @@ void octree_reduce(heap_t *heap, uint8_t n_colors)
         {
             total_colors--;
         }
+
+        octree_destroy(current);
     }
 }
 
@@ -252,6 +254,8 @@ int dither(image_t *image, unsigned char *palette, int palette_len, unsigned cha
             dither[(k % image->width + image->width) * 3 + 2] += quant_err_b * 1 / 4;
         }
     }
+
+    free(dither);
 
     return SUCCESS;
 }
