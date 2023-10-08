@@ -6,16 +6,18 @@
 
 #include "tests-utils.h"
 
+const char *type_list[] = {"gray", "graya", "rgb", "rgba", "palette"};
+
 int make_convert_tests()
 {
-    const char *type_list[] = {"gray", "graya", "rgb", "rgba", "palette"};
-
     int res;
     size_t len;
     unsigned char *buffer;
     unsigned char path[MAX_PATH];
     unsigned char res_path[MAX_PATH];
     options_t options = default_options();
+
+    options.randomizer.type = RANDOMIZER_NONE;
 
     for (int i = 0; i < 5; i++)
     {
@@ -24,9 +26,6 @@ int make_convert_tests()
         res = mkdir(path, 0777);
 
         snprintf(path, MAX_PATH, "../../tests/base/%s.png", type_list[i]);
-        snprintf(res_path, MAX_PATH, "../../tests/snapshots/convert/%s/src.png", type_list[i]);
-
-        copy_file(path, res_path);
 
         buffer = load_file(path, &len);
 
@@ -42,6 +41,68 @@ int make_convert_tests()
             snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s/%s", type_list[i], type_list[j]);
             sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
         }
+
+        free(buffer);
+    }
+}
+
+int make_randomize_tests()
+{
+    int res;
+    size_t len;
+    unsigned char *buffer;
+    unsigned char path[MAX_PATH];
+    unsigned char res_path[MAX_PATH];
+    options_t options = default_options();
+
+    options.randomizer.type = RANDOMIZER_AUTO;
+
+    for (int i = 0; i < 5; i++)
+    {
+        snprintf(path, MAX_PATH, "../../tests/base/%s.png", type_list[i]);
+
+        buffer = load_file(path, &len);
+
+        snprintf(path, MAX_PATH, "../../tests/snapshots/randomize/%s", type_list[i]);
+        sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+
+        free(buffer);
+    }
+}
+
+int make_resize_tests()
+{
+    int res;
+    size_t len;
+    unsigned char *buffer;
+    unsigned char path[MAX_PATH];
+    unsigned char res_path[MAX_PATH];
+    options_t options = default_options();
+
+    options.randomizer.type = RANDOMIZER_NONE;
+
+    for (int i = 0; i < 5; i++)
+    {
+        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s", type_list[i]);
+        res = mkdir(path, 0777);
+
+        snprintf(path, MAX_PATH, "../../tests/base/%s.png", type_list[i]);
+
+        buffer = load_file(path, &len);
+
+        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/smaller", type_list[i]);
+        options.resizer.type = RESIZER_AUTO;
+        options.resizer.width = 20;
+        options.resizer.height = 20;
+        sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+
+        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/bigger", type_list[i]);
+        options.resizer.type = RESIZER_AUTO;
+        options.resizer.width = 40;
+        options.resizer.height = 40;
+        sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+
+        free(buffer);
     }
 }
 
@@ -50,4 +111,6 @@ int main(void)
     srand(1);
     init_convert_map();
     make_convert_tests();
+    make_randomize_tests();
+    make_resize_tests();
 }

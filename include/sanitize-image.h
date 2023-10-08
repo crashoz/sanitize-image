@@ -47,7 +47,9 @@ typedef struct
 typedef enum
 {
     RESIZER_NONE,
-    RESIZER_BILINEAR
+    RESIZER_NN,
+    RESIZER_BILINEAR,
+    RESIZER_AUTO
 } resizer_type;
 typedef struct
 {
@@ -102,6 +104,8 @@ typedef struct
     unsigned char *trns; // transparency settings (png)
 } image_t;
 
+void destroy_image(image_t *im);
+
 image_type str_to_type(const char *str);
 int type_to_str(image_type type, char *str, size_t len);
 int type_to_ext(image_type type, char *str, size_t len);
@@ -135,6 +139,7 @@ int randomize_channels_keep_trns(image_t *image);
 int randomize_palette(image_t *image);
 
 int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type);
+int nn_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
 int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height);
 
 #define SUCCESS 0

@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#define BUFFER_SIZE 512 * 512 * 4
+#define BUFFER_SIZE 2048 * 2048 * 4
 #define MAX_PATH 4096
 
 int copy_file(const char *in_path, const char *out_path);

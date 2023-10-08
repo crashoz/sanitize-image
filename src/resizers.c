@@ -1,3 +1,4 @@
+#include <string.h>
 #include <sanitize-image.h>
 
 #define FACTOR 2048
@@ -9,6 +10,18 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
     {
         *dst_ptr = src;
         return 0;
+    }
+
+    if (type == RESIZER_AUTO)
+    {
+        if (src->palette != NULL)
+        {
+            type = RESIZER_NN;
+        }
+        else
+        {
+            type = RESIZER_BILINEAR;
+        }
     }
 
     if (src->width == width && src->height == height)
@@ -29,6 +42,9 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
 
     switch (type)
     {
+    case RESIZER_NN:
+        nn_interp(src, dst_ptr, width, height);
+        break;
     case RESIZER_BILINEAR:
         bilinear_interp(src, dst_ptr, width, height);
         break;
@@ -36,6 +52,56 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
         break;
     }
 
+    return 0;
+}
+
+int nn_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
+{
+    image_t *dst = malloc(sizeof(image_t));
+    if (dst == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    im_shallow_copy(src, dst);
+    dst->width = width;
+    dst->height = height;
+
+    dst->data = malloc(width * height * src->channels);
+    if (dst->data == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    const int row_stride = src->width * src->channels;
+    const int dst_row_stride = width * src->channels;
+    const int channels = src->channels;
+
+    const int xs = (int)((src->width << SHIFT) / width);
+    const int ys = (int)((src->height << SHIFT) / height);
+
+    for (int y = 0; y < height; y++)
+    {
+        int sy = (y * ys) >> SHIFT;
+        for (int x = 0; x < width; x++)
+        {
+            int sx = (x * xs) >> SHIFT;
+
+            for (int i = 0; i < channels; i++)
+            {
+                dst->data[y * dst_row_stride + x * channels + i] = src->data[sy * row_stride + sx * channels + i];
+            }
+        }
+    }
+
+    if (src->palette != NULL)
+    {
+        dst->palette_len = src->palette_len;
+        dst->palette = malloc(dst->palette_len * 3);
+        memcpy(dst->palette, src->palette, dst->palette_len * 3);
+    }
+
+    *dst_ptr = dst;
     return 0;
 }
 
@@ -49,7 +115,7 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
     image_t *dst = malloc(sizeof(image_t));
     if (dst == NULL)
     {
-        return 1;
+        return ERROR_OUT_OF_MEMORY;
     }
 
     im_shallow_copy(src, dst);
@@ -59,7 +125,7 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
     dst->data = malloc(width * height * src->channels);
     if (dst->data == NULL)
     {
-        return 1;
+        return ERROR_OUT_OF_MEMORY;
     }
 
     const int row_stride = src->width * src->channels;
