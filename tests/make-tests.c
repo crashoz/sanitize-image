@@ -6,7 +6,8 @@
 
 #include "tests-utils.h"
 
-const char *type_list[] = {"gray", "graya", "rgb", "rgba", "palette"};
+const char *color_list[] = {"gray", "graya", "rgb", "rgba", "palette"};
+const char *type_list[] = {"png", "jpeg"};
 
 int make_convert_tests()
 {
@@ -22,10 +23,10 @@ int make_convert_tests()
     for (int i = 0; i < 5; i++)
     {
 
-        snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s", color_list[i]);
         res = mkdir(path, 0777);
 
-        snprintf(path, MAX_PATH, "../../tests/base/%s.png", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/base/%s.png", color_list[i]);
 
         buffer = load_file(path, &len);
 
@@ -36,9 +37,9 @@ int make_convert_tests()
                 continue;
             }
 
-            options.output.png.color_type = str_to_color_type(type_list[j]);
+            options.output.png.color_type = str_to_color_type(color_list[j]);
 
-            snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s/%s", type_list[i], type_list[j]);
+            snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s/%s", color_list[i], color_list[j]);
             sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
         }
 
@@ -59,11 +60,11 @@ int make_randomize_tests()
 
     for (int i = 0; i < 5; i++)
     {
-        snprintf(path, MAX_PATH, "../../tests/base/%s.png", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/base/%s.png", color_list[i]);
 
         buffer = load_file(path, &len);
 
-        snprintf(path, MAX_PATH, "../../tests/snapshots/randomize/%s", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/snapshots/randomize/%s", color_list[i]);
         sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
 
         free(buffer);
@@ -83,24 +84,66 @@ int make_resize_tests()
 
     for (int i = 0; i < 5; i++)
     {
-        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s", color_list[i]);
         res = mkdir(path, 0777);
 
-        snprintf(path, MAX_PATH, "../../tests/base/%s.png", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/base/%s.png", color_list[i]);
 
         buffer = load_file(path, &len);
 
-        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/smaller", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/smaller", color_list[i]);
         options.resizer.type = RESIZER_AUTO;
         options.resizer.width = 20;
         options.resizer.height = 20;
         sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
 
-        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/bigger", type_list[i]);
+        snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/bigger", color_list[i]);
         options.resizer.type = RESIZER_AUTO;
         options.resizer.width = 40;
         options.resizer.height = 40;
         sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+
+        free(buffer);
+    }
+}
+
+int make_types_tests()
+{
+    int res;
+    size_t len;
+    unsigned char *buffer;
+    unsigned char path[MAX_PATH];
+    unsigned char res_path[MAX_PATH];
+
+    image_type type;
+    unsigned char ext[8];
+
+    options_t options = default_options();
+
+    options.randomizer.type = RANDOMIZER_NONE;
+
+    for (int i = 0; i < 2; i++)
+    {
+        snprintf(path, MAX_PATH, "../../tests/snapshots/types/%s", type_list[i]);
+        res = mkdir(path, 0777);
+
+        type_to_ext(str_to_type(type_list[i]), ext, 8);
+
+        snprintf(path, MAX_PATH, "../../tests/base/rgb%s", ext);
+        buffer = load_file(path, &len);
+
+        for (int j = 0; j < 2; j++)
+        {
+            if (i == j)
+            {
+                continue;
+            }
+
+            options.output.type = str_to_type(type_list[j]);
+
+            snprintf(path, MAX_PATH, "../../tests/snapshots/types/%s/rgb", type_list[i]);
+            sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+        }
 
         free(buffer);
     }
@@ -113,4 +156,5 @@ int main(void)
     make_convert_tests();
     make_randomize_tests();
     make_resize_tests();
+    make_types_tests();
 }
