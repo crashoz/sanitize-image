@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 #include <sanitize-image.h>
-#include <quantizers.h>
+#include "quantizers.h"
 
 #define clamp(v) (v) > 255 ? 255 : (v) < 0 ? 0 \
                                            : (v)

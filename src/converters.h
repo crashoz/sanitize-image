@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <sanitize-image.h>
 
 typedef int (*convert_fn)(image_t *, image_t **);
 

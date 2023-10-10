@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <sanitize-image.h>
+
 struct octree_node
 {
     uint32_t count;

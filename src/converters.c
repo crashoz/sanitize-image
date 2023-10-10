@@ -1,6 +1,6 @@
 #include <sanitize-image.h>
-#include <quantizers.h>
-#include <converters.h>
+#include "quantizers.h"
+#include "converters.h"
 
 const uint32_t x = 313524;
 const uint32_t y = 615514;
