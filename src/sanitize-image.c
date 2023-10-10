@@ -11,7 +11,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     int ret, errorcode;
     image_t *im = NULL;
 
-    debug_options(options);
+    // debug_options(options);
 
     // Guess image type with the magic header
     if (input_type == TYPE_UNKNOWN)
@@ -75,7 +75,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         return ret;
     }
 
-    debug_image(im);
+    // debug_image(im);
 
     // Randomize color values
     ret = 0;
@@ -143,7 +143,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     if (im->color != output_color)
     {
-        printf("convert %s -> %s\n", color_type_to_str(im->color), color_type_to_str(output_color));
+        // printf("convert %s -> %s\n", color_type_to_str(im->color), color_type_to_str(output_color));
         image_t *converted_im;
         ret = convert_map[im->color][output_color](im, &converted_im);
         if (ret != 0)
@@ -161,7 +161,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     // *((uint16_t *)(im->trns) + 1) = 95;
     // *((uint16_t *)(im->trns) + 2) = 96;
 
-    debug_image(im);
+    // debug_image(im);
 
     // Encode to output file
     char full_path[MAX_PATH_LEN];

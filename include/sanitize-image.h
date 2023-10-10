@@ -1,5 +1,7 @@
 #pragma once
 
+// TODO protect namespace
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <spng.h>
@@ -103,6 +105,8 @@ typedef struct
     uint32_t trns_len;
     unsigned char *trns; // transparency settings (png)
 } image_t;
+
+void init_convert_map();
 
 void destroy_image(image_t *im);
 
