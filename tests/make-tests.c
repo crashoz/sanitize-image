@@ -6,9 +6,6 @@
 
 #include "tests-utils.h"
 
-const char *color_list[] = {"gray", "graya", "rgb", "rgba", "palette"};
-const char *type_list[] = {"png", "jpeg"};
-
 int make_convert_tests()
 {
     int res;
@@ -20,7 +17,7 @@ int make_convert_tests()
 
     options.randomizer.type = RANDOMIZER_NONE;
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < color_list_len; i++)
     {
 
         snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s", color_list[i]);
@@ -30,7 +27,7 @@ int make_convert_tests()
 
         buffer = load_file(path, &len);
 
-        for (int j = 0; j < 5; j++)
+        for (int j = 0; j < color_list_len; j++)
         {
             if (i == j)
             {
@@ -58,8 +55,9 @@ int make_randomize_tests()
 
     options.randomizer.type = RANDOMIZER_AUTO;
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < color_list_len; i++)
     {
+        srand(1);
         snprintf(path, MAX_PATH, "../../tests/base/%s.png", color_list[i]);
 
         buffer = load_file(path, &len);
@@ -82,7 +80,7 @@ int make_resize_tests()
 
     options.randomizer.type = RANDOMIZER_NONE;
 
-    for (int i = 0; i < 5; i++)
+    for (int i = 0; i < color_list_len; i++)
     {
         snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s", color_list[i]);
         res = mkdir(path, 0777);
@@ -122,7 +120,7 @@ int make_types_tests()
 
     options.randomizer.type = RANDOMIZER_NONE;
 
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < type_list_len; i++)
     {
         snprintf(path, MAX_PATH, "../../tests/snapshots/types/%s", type_list[i]);
         res = mkdir(path, 0777);
@@ -132,13 +130,8 @@ int make_types_tests()
         snprintf(path, MAX_PATH, "../../tests/base/rgb%s", ext);
         buffer = load_file(path, &len);
 
-        for (int j = 0; j < 2; j++)
+        for (int j = 0; j < type_list_len; j++)
         {
-            if (i == j)
-            {
-                continue;
-            }
-
             options.output.type = str_to_type(type_list[j]);
 
             snprintf(path, MAX_PATH, "../../tests/snapshots/types/%s/rgb", type_list[i]);
@@ -153,6 +146,7 @@ int main(void)
 {
     srand(1);
     init_convert_map();
+
     make_convert_tests();
     make_randomize_tests();
     make_resize_tests();
