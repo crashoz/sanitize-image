@@ -6,10 +6,11 @@
 
 #define BUFFER_SIZE 1024 * 1024 * 3
 
+// TODO scope function sizim
+
 int main(int argc, char **argv)
 {
     srand(1);
-
     init_convert_map();
 
     unsigned char *buffer = malloc(BUFFER_SIZE);

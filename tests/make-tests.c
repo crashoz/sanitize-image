@@ -2,7 +2,7 @@
 #include <sys/types.h>
 
 #include <sanitize-image.h>
-#include <converters.h>
+#include "../src/converters.h"
 
 #include "tests-utils.h"
 
