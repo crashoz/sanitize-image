@@ -123,13 +123,19 @@ typedef struct
 - `COLOR_RGBA`
 - `COLOR_PALETTE`
 
-**`int compression_level`** is an integer between 0 and 9 with 9 being the maximum compression (in png compression is always lossless)
+**`int compression_level`** is an integer between 0 and 9 with 9 being the maximum compression (in png compression is always lossless).
 
-**`enum spng_filter_choice filter`**
+**`enum spng_filter_choice filter`** can be one or many of:
 
-- `SPNG_FILTER_CHOICE_ALL`
+- `SPNG_DISABLE_FILTERING` = 0,
+- `SPNG_FILTER_CHOICE_NONE` = 8,
+- `SPNG_FILTER_CHOICE_SUB` = 16,
+- `SPNG_FILTER_CHOICE_UP` = 32,
+- `SPNG_FILTER_CHOICE_AVG` = 64,
+- `SPNG_FILTER_CHOICE_PAETH` = 128,
+- `SPNG_FILTER_CHOICE_ALL` = (8|16|32|64|128)
 
-**`bool interlace`** enables line interlacing
+**`bool interlace`** enables a degraded version of the image to load first.
 
 ### Output JPEG options
 
@@ -141,15 +147,24 @@ typedef struct
     J_DCT_METHOD dct_method;
     bool optimize;
     int smoothing;
+    bool progressive;
 } output_jpeg_options_t;
 ```
 
 **`int quality`** is an integer between 0 and 100 with 0 being the maximum compression (in jpeg compression is lossless). A value below 90 will be noticeable in the result.
 
-**`bool arith_code`** enables arithmetic coding
+**`bool arith_code`** enables arithmetic coding (instead of Huffman)
 
-**`J_DCT_METHOD dct_method`** ?
+**`J_DCT_METHOD dct_method`** can be one of:
 
-**`bool optimize`** enables jpeg optimizations
+- `JDCT_ISLOW`: accurate integer method
+- `JDCT_IFAST`: less accurate integer method [legacy feature]
+- `JDCT_FLOAT`: floating-point method [legacy feature]
+- `JDCT_DEFAULT`: default method (normally JDCT_ISLOW)
+- `JDCT_FASTEST`: fastest method (normally JDCT_IFAST)
 
-**`int smoothing`** smoothing value
+**`bool optimize`** enables jpeg optimizations: compute optimal Huffman coding tables for the image (default false)
+
+**`int smoothing`** smoothing value between 0 and 100 with 100 being maximum smoothing (default 0)
+
+**`bool progressive`** enables jpeg progressive decoding (similar to png's interlace)

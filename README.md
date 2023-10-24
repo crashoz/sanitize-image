@@ -32,6 +32,17 @@ Then build the library
 cmake --build .
 ```
 
+### Testing
+
+```
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build .
+cd tests
+./test_all
+```
+
 ## Getting started
 
 The input is an image binary buffer as `unsigned char*`
@@ -81,7 +92,7 @@ free(buffer);
 
 ## Documentation
 
-See DOC.md
+See [DOC.md](DOC.md)
 
 ## References about untrusted files
 
