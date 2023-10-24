@@ -289,6 +289,11 @@ int jpeg_encode(const char *path, image_t *image, output_jpeg_options_t options)
     /* Use 4:4:4 subsampling (default is 4:2:0) */
     cinfo.comp_info[0].h_samp_factor = cinfo.comp_info[0].v_samp_factor = 1;
 
+    if (options.progressive)
+    {
+        jpeg_simple_progression(&cinfo);
+    }
+
     /* Step 4: Start compressor */
 
     /* TRUE ensures that we will write a complete interchange-JPEG file.

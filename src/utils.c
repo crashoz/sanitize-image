@@ -182,7 +182,7 @@ options_t default_options()
         {RESIZER_NONE, 512, 512},
         {TYPE_INPUT,
          {COLOR_INPUT, 9, SPNG_FILTER_CHOICE_ALL, false},
-         {90, false, JDCT_DEFAULT, true, 0}}};
+         {90, false, JDCT_DEFAULT, true, 0, false}}};
     return options;
 }
 

@@ -75,6 +75,7 @@ typedef struct
     J_DCT_METHOD dct_method;
     bool optimize;
     int smoothing;
+    bool progressive;
 } output_jpeg_options_t;
 typedef struct
 {

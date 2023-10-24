@@ -30,10 +30,7 @@ int main(int argc, char **argv)
 
     options_t options = default_options();
     options.randomizer.type = RANDOMIZER_NONE;
-    options.resizer.type = RESIZER_BILINEAR;
-    options.resizer.width = 900;
-    options.resizer.height = 900;
-    options.output.type = TYPE_PNG;
+    options.output.type = TYPE_JPEG;
     char res_path[4096];
     int ret = sanitize(buffer, n, TYPE_UNKNOWN, "../../tmp/new", options, res_path, 4096);
 
