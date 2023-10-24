@@ -9,6 +9,8 @@ project(sanitize-image VERSION 1.0
     DESCRIPTION "Image sanitizer"
     LANGUAGES C)
 
+option(BUILD_SHARED_LIBS "Build dependencies as shared libs" ON)
+
 # set(CMAKE_VERBOSE_MAKEFILE on)
 
 # set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
