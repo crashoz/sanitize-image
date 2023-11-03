@@ -47,8 +47,8 @@ heap_node_t heap_insert_extract(heap_t *heap, heap_node_t elt);
 int octree_to_heap_rec(octree_node_t *node, heap_t *heap);
 heap_t *octree_to_heap(octree_node_t *node);
 void octree_reduce(heap_t *heap, uint8_t n_colors);
-void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res);
+void octree_palette(szim_image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res);
 
-int dither(image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data);
+int dither(szim_image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data);
 
-void quantize_rgb(image_t *image);
+void quantize_rgb(szim_image_t *image);

@@ -12,7 +12,7 @@
 // TODO png bKGD chunk
 // TODO handle other bit depths
 
-int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
+int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, szim_image_t **out_image)
 {
     int errorcode = 0;
     FILE *png;
@@ -21,10 +21,10 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     *out_image = NULL;
 
-    image_t *image = malloc(sizeof(image_t));
+    szim_image_t *image = malloc(sizeof(szim_image_t));
     if (image == NULL)
     {
-        errorcode = ERROR_OUT_OF_MEMORY;
+        errorcode = SZIM_ERROR_OUT_OF_MEMORY;
         goto error;
     }
     image->data = NULL;
@@ -34,21 +34,21 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     if (ctx == NULL)
     {
         printf("spng_ctx_new() failed\n");
-        errorcode = ERROR_INTERNAL;
+        errorcode = SZIM_ERROR_INTERNAL;
         goto error;
     }
 
     /* Ignore and don't calculate chunk CRC's */
     if (spng_set_crc_action(ctx, SPNG_CRC_USE, SPNG_CRC_USE) != 0)
     {
-        errorcode = ERROR_INTERNAL;
+        errorcode = SZIM_ERROR_INTERNAL;
         goto error;
     }
 
     //! limits against malicious input
     if (spng_set_image_limits(ctx, max_width, max_height) != 0)
     {
-        errorcode = ERROR_INTERNAL;
+        errorcode = SZIM_ERROR_INTERNAL;
         goto error;
     }
 
@@ -57,14 +57,14 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     size_t limit = 1024 * 1024 * 64;
     if (spng_set_chunk_limits(ctx, limit, limit) != 0)
     {
-        errorcode = ERROR_INTERNAL;
+        errorcode = SZIM_ERROR_INTERNAL;
         goto error;
     };
 
     /* Set source PNG */
     if (spng_set_png_buffer(ctx, buffer, buffer_size) != 0)
     {
-        errorcode = ERROR_SET_SOURCE;
+        errorcode = SZIM_ERROR_SET_SOURCE;
         goto error;
     }; /* or _buffer(), _stream() */
 
@@ -73,7 +73,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     if (ret != 0)
     {
-        errorcode = ERROR_BAD_HEADER;
+        errorcode = SZIM_ERROR_BAD_HEADER;
         goto error;
     }
 
@@ -86,7 +86,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     if (image->bit_depth != 8)
     {
-        errorcode = ERROR_NOT_SUPPORTED;
+        errorcode = SZIM_ERROR_NOT_SUPPORTED;
         goto error;
     }
 
@@ -107,14 +107,14 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     */
 
-    if (image->color == COLOR_PALETTE)
+    if (image->color == SZIM_COLOR_PALETTE)
     {
         struct spng_plte plte = {0};
         ret = spng_get_plte(ctx, &plte);
 
         if (ret != 0)
         {
-            errorcode = ERROR_MISSING_PALETTE;
+            errorcode = SZIM_ERROR_MISSING_PALETTE;
             goto error;
         }
 
@@ -123,7 +123,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
         image->palette = malloc(3 * plte.n_entries);
         if (image->palette == NULL)
         {
-            errorcode = ERROR_OUT_OF_MEMORY;
+            errorcode = SZIM_ERROR_OUT_OF_MEMORY;
             goto error;
         }
 
@@ -149,14 +149,14 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     if (ret != 0)
     {
-        errorcode = ERROR_IMAGE_SIZE;
+        errorcode = SZIM_ERROR_IMAGE_SIZE;
         goto error;
     }
 
     if (image_size > max_size)
     {
         printf("image is too big: %d\n", image_size);
-        errorcode = ERROR_IMAGE_SIZE;
+        errorcode = SZIM_ERROR_IMAGE_SIZE;
         goto error;
     }
 
@@ -164,7 +164,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
 
     if (image->data == NULL)
     {
-        errorcode = ERROR_OUT_OF_MEMORY;
+        errorcode = SZIM_ERROR_OUT_OF_MEMORY;
         goto error;
     }
 
@@ -174,7 +174,7 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     if (ret != 0)
     {
         printf("spng_decode_image() error: %s\n", spng_strerror(ret));
-        errorcode = ERROR_DECODE;
+        errorcode = SZIM_ERROR_DECODE;
         goto error;
     }
 
@@ -222,34 +222,34 @@ int png_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, ui
     {
         switch (image->color)
         {
-        case COLOR_GRAY:
+        case SZIM_COLOR_GRAY:
             image->trns_len = 1;
             image->trns = malloc(2);
             if (image->trns == NULL)
             {
-                errorcode = ERROR_OUT_OF_MEMORY;
+                errorcode = SZIM_ERROR_OUT_OF_MEMORY;
                 goto error;
             }
             *(uint16_t *)(image->trns) = trns.gray;
             break;
-        case COLOR_RGB:
+        case SZIM_COLOR_RGB:
             image->trns_len = 3;
             image->trns = malloc(3 * 2);
             if (image->trns == NULL)
             {
-                errorcode = ERROR_OUT_OF_MEMORY;
+                errorcode = SZIM_ERROR_OUT_OF_MEMORY;
                 goto error;
             }
             *(uint16_t *)(image->trns) = trns.red;
             *((uint16_t *)(image->trns) + 1) = trns.green;
             *((uint16_t *)(image->trns) + 2) = trns.blue;
             break;
-        case COLOR_PALETTE:
+        case SZIM_COLOR_PALETTE:
             image->trns_len = trns.n_type3_entries;
             image->trns = malloc(trns.n_type3_entries);
             if (image->trns == NULL)
             {
-                errorcode = ERROR_OUT_OF_MEMORY;
+                errorcode = SZIM_ERROR_OUT_OF_MEMORY;
                 goto error;
             }
             memcpy(image->trns, trns.type3_alpha, trns.n_type3_entries);
@@ -364,7 +364,7 @@ void custom_dec_error_exit(j_common_ptr cinfo)
     longjmp(err->setjmp_buffer, 1);
 }
 
-int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, image_t **out_image)
+int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, uint32_t max_height, size_t max_size, szim_image_t **out_image)
 {
     int errorcode = 0;
     struct jpeg_decompress_struct cinfo;
@@ -374,15 +374,15 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
     int col;
     int row_stride; /* physical row width in output buffer */
 
-    image_t *image = malloc(sizeof(image_t));
+    szim_image_t *image = malloc(sizeof(szim_image_t));
 
     if (image == NULL)
     {
-        errorcode = ERROR_OUT_OF_MEMORY;
+        errorcode = SZIM_ERROR_OUT_OF_MEMORY;
         goto error;
     }
 
-    image->color = COLOR_RGB;
+    image->color = SZIM_COLOR_RGB;
     image->bit_depth = 8;
     image->channels = 3;
     image->trns_len = 0;
@@ -414,13 +414,13 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
         switch (jerr.pub.msg_code)
         {
         case JERR_FILE_READ:
-            errorcode = ERROR_SET_SOURCE;
+            errorcode = SZIM_ERROR_SET_SOURCE;
             break;
         case JERR_OUT_OF_MEMORY:
-            errorcode = ERROR_OUT_OF_MEMORY;
+            errorcode = SZIM_ERROR_OUT_OF_MEMORY;
             break;
         default:
-            errorcode = ERROR_INTERNAL;
+            errorcode = SZIM_ERROR_INTERNAL;
             break;
         }
 
@@ -448,20 +448,20 @@ int jpeg_decode(unsigned char *buffer, size_t buffer_size, uint32_t max_width, u
 
     if (cinfo.data_precision != 8)
     {
-        errorcode = ERROR_NOT_SUPPORTED;
+        errorcode = SZIM_ERROR_NOT_SUPPORTED;
         goto error;
     }
 
     //! limits against malicious input
     if (cinfo.image_width > max_width || cinfo.image_height > max_height)
     {
-        errorcode = ERROR_IMAGE_SIZE;
+        errorcode = SZIM_ERROR_IMAGE_SIZE;
         goto error;
     }
 
     if ((cinfo.image_width * cinfo.image_height * cinfo.num_components * cinfo.data_precision) / 8 > max_size)
     {
-        errorcode = ERROR_IMAGE_SIZE;
+        errorcode = SZIM_ERROR_IMAGE_SIZE;
         goto error;
     }
 

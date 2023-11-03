@@ -15,9 +15,9 @@ START_TEST(convert_colors)
 
     snprintf(input, MAX_PATH, "../../tests/base/%s.png", color_list[_i]);
 
-    options_t options = default_options();
-    options.randomizer.type = RANDOMIZER_NONE;
-    options.output.type = TYPE_PNG;
+    szim_options_t options = szim_default_options();
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
+    options.output.type = SZIM_TYPE_PNG;
 
     for (int j = 0; j < color_list_len; j++)
     {
@@ -42,8 +42,8 @@ START_TEST(randomizer)
 
     snprintf(input, MAX_PATH, "../../tests/base/%s.png", color_list[_i]);
 
-    options_t options = default_options();
-    options.randomizer.type = RANDOMIZER_AUTO;
+    szim_options_t options = szim_default_options();
+    options.randomizer.type = SZIM_RANDOMIZER_AUTO;
 
     snprintf(output, MAX_PATH, "../../tests/snapshots/randomize/%s.png", color_list[_i]);
 
@@ -59,10 +59,10 @@ START_TEST(resizer)
 
     snprintf(input, MAX_PATH, "../../tests/base/%s.png", color_list[_i]);
 
-    options_t options = default_options();
-    options.randomizer.type = RANDOMIZER_NONE;
+    szim_options_t options = szim_default_options();
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
 
-    options.resizer.type = RESIZER_AUTO;
+    options.resizer.type = SZIM_RESIZER_AUTO;
     options.resizer.width = 20;
     options.resizer.height = 20;
 
@@ -70,7 +70,7 @@ START_TEST(resizer)
 
     ck_assert_msg(test_snapshot(input, output, options), "resizer 20x20 %s", color_list[_i]);
 
-    options.resizer.type = RESIZER_AUTO;
+    options.resizer.type = SZIM_RESIZER_AUTO;
     options.resizer.width = 40;
     options.resizer.height = 40;
 
@@ -91,8 +91,8 @@ START_TEST(convert_types)
 
     snprintf(input, MAX_PATH, "../../tests/base/rgb%s", ext);
 
-    options_t options = default_options();
-    options.randomizer.type = RANDOMIZER_NONE;
+    szim_options_t options = szim_default_options();
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
 
     for (int j = 0; j < type_list_len; j++)
     {

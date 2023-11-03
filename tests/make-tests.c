@@ -13,9 +13,9 @@ int make_convert_tests()
     unsigned char *buffer;
     unsigned char path[MAX_PATH];
     unsigned char res_path[MAX_PATH];
-    options_t options = default_options();
+    szim_options_t options = szim_default_options();
 
-    options.randomizer.type = RANDOMIZER_NONE;
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
 
     for (int i = 0; i < color_list_len; i++)
     {
@@ -37,7 +37,7 @@ int make_convert_tests()
             options.output.png.color_type = str_to_color_type(color_list[j]);
 
             snprintf(path, MAX_PATH, "../../tests/snapshots/convert/%s/%s", color_list[i], color_list[j]);
-            sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+            sanitize(buffer, len, SZIM_TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
         }
 
         free(buffer);
@@ -51,9 +51,9 @@ int make_randomize_tests()
     unsigned char *buffer;
     unsigned char path[MAX_PATH];
     unsigned char res_path[MAX_PATH];
-    options_t options = default_options();
+    szim_options_t options = szim_default_options();
 
-    options.randomizer.type = RANDOMIZER_AUTO;
+    options.randomizer.type = SZIM_RANDOMIZER_AUTO;
 
     for (int i = 0; i < color_list_len; i++)
     {
@@ -63,7 +63,7 @@ int make_randomize_tests()
         buffer = load_file(path, &len);
 
         snprintf(path, MAX_PATH, "../../tests/snapshots/randomize/%s", color_list[i]);
-        sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+        sanitize(buffer, len, SZIM_TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
 
         free(buffer);
     }
@@ -76,9 +76,9 @@ int make_resize_tests()
     unsigned char *buffer;
     unsigned char path[MAX_PATH];
     unsigned char res_path[MAX_PATH];
-    options_t options = default_options();
+    szim_options_t options = szim_default_options();
 
-    options.randomizer.type = RANDOMIZER_NONE;
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
 
     for (int i = 0; i < color_list_len; i++)
     {
@@ -90,16 +90,16 @@ int make_resize_tests()
         buffer = load_file(path, &len);
 
         snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/smaller", color_list[i]);
-        options.resizer.type = RESIZER_AUTO;
+        options.resizer.type = SZIM_RESIZER_AUTO;
         options.resizer.width = 20;
         options.resizer.height = 20;
-        sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+        sanitize(buffer, len, SZIM_TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
 
         snprintf(path, MAX_PATH, "../../tests/snapshots/resize/%s/bigger", color_list[i]);
-        options.resizer.type = RESIZER_AUTO;
+        options.resizer.type = SZIM_RESIZER_AUTO;
         options.resizer.width = 40;
         options.resizer.height = 40;
-        sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+        sanitize(buffer, len, SZIM_TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
 
         free(buffer);
     }
@@ -113,12 +113,12 @@ int make_types_tests()
     unsigned char path[MAX_PATH];
     unsigned char res_path[MAX_PATH];
 
-    image_type type;
+    szim_image_type type;
     unsigned char ext[8];
 
-    options_t options = default_options();
+    szim_options_t options = szim_default_options();
 
-    options.randomizer.type = RANDOMIZER_NONE;
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
 
     for (int i = 0; i < type_list_len; i++)
     {
@@ -135,7 +135,7 @@ int make_types_tests()
             options.output.type = str_to_type(type_list[j]);
 
             snprintf(path, MAX_PATH, "../../tests/snapshots/types/%s/rgb", type_list[i]);
-            sanitize(buffer, len, TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
+            sanitize(buffer, len, SZIM_TYPE_UNKNOWN, path, options, res_path, MAX_PATH);
         }
 
         free(buffer);

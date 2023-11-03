@@ -63,7 +63,7 @@ int octree_insert_color(octree_node_t *node, uint8_t r, uint8_t g, uint8_t b)
             node->children[idx] = octree_create_node();
             if (node->children[idx] == NULL)
             {
-                return ERROR_OUT_OF_MEMORY;
+                return SZIM_ERROR_OUT_OF_MEMORY;
             }
         }
         node->children[idx]->parent = node;
@@ -203,12 +203,12 @@ int closest(unsigned char *palette, int palette_len, uint8_t r, uint8_t g, uint8
 }
 
 // Sierra Lite dithering
-int dither(image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data)
+int dither(szim_image_t *image, unsigned char *palette, int palette_len, unsigned char *indexed_data)
 {
     int32_t *dither = calloc(image->width * 2 * 3, sizeof(int32_t));
     if (dither == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (uint32_t k = 0; k < image->width * image->height; k++)
@@ -260,7 +260,7 @@ int dither(image_t *image, unsigned char *palette, int palette_len, unsigned cha
     return SUCCESS;
 }
 
-void octree_palette(image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res)
+void octree_palette(szim_image_t *image, octree_node_t *octree, int n_colors, unsigned char *indexed_data, unsigned char *palette, int *plte_len_res)
 {
     octree_node_t *node;
     int plte_len = 0;
@@ -328,7 +328,7 @@ int heap_grow(heap_t *heap)
     heap->arr = realloc(heap->arr, heap->capacity * sizeof(heap_node_t));
     if (heap->arr == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     return SUCCESS;
@@ -418,7 +418,7 @@ heap_node_t heap_insert_extract(heap_t *heap, heap_node_t elt)
     return min;
 }
 
-void quantize_rgb(image_t *image)
+void quantize_rgb(szim_image_t *image)
 {
     int n_colors = 255;
     octree_node_t *octree = octree_create_node();
@@ -444,7 +444,7 @@ void quantize_rgb(image_t *image)
     image->data = indexed_data;
     image->palette = palette;
     image->palette_len = plte_len;
-    image->color = COLOR_PALETTE;
+    image->color = SZIM_COLOR_PALETTE;
     image->channels = 1;
     image->bit_depth = 8;
 

@@ -47,18 +47,18 @@ cd tests
 
 The input is an image binary buffer as `unsigned char*`
 
-All settings are specified in the `options_t` struct. You can get good default settings with:
+All settings are specified in the `szim_options_t` struct. You can get good default settings with:
 
 ```c
-options_t options = default_options()
+szim_options_t options = szim_default_options()
 ```
 
 This will output an image in the same type and size as the input.
 
-To process the image use the `sanitize` function:
+To process the image use the `szim_sanitize` function:
 
 ```c
-int sanitize(unsigned char *data, size_t size, image_type type, const char *path, options_t options, char *res_path, size_t res_path_len);
+int szim_sanitize(unsigned char *data, size_t size, image_type type, const char *path, szim_options_t options, char *res_path, size_t res_path_len);
 ```
 
 With the following parameters:
@@ -67,7 +67,7 @@ With the following parameters:
 - `size_t size` = length (in bytes) of data
 - `image_type type` = the data image type or `TYPE_UNKNOWN` to guess it
 - `const char *path` = the output file path **without extension**
-- `options_t options` = the options struct
+- `szim_options_t options` = the options struct
 - `char *res_path` = (output) will contain the full output path
 - `size_t res_path_len` = length of the `res_path` buffer
 
@@ -81,9 +81,9 @@ FILE *f = fopen("./in_image.png", "rb");
 int n = fread(buffer, sizeof(unsigned char), BUFFER_SIZE, f);
 fclose(f);
 
-options_t options = default_options();
+szim_options_t options = szim_default_options();
 char res_path[MAX_PATH];
-int ret = sanitize(buffer, n, TYPE_UNKNOWN, "./out_image", options, res_path, MAX_PATH);
+int ret = szim_sanitize(buffer, n, SZIM_TYPE_UNKNOWN, "./out_image", options, res_path, MAX_PATH);
 
 printf("image has been saved as: %s\n", res_path);
 

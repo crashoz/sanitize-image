@@ -50,13 +50,13 @@ unsigned char *load_file(const char *path, size_t *len)
     return buffer;
 }
 
-int test_snapshot(const char *src, const char *snp, options_t options)
+int test_snapshot(const char *src, const char *snp, szim_options_t options)
 {
     size_t src_len;
     unsigned char *src_buffer = load_file(src, &src_len);
     unsigned char res_path[MAX_PATH];
 
-    sanitize(src_buffer, src_len, TYPE_UNKNOWN, "./res", options, res_path, MAX_PATH);
+    szim_sanitize(src_buffer, src_len, SZIM_TYPE_UNKNOWN, "./res", options, res_path, MAX_PATH);
 
     size_t dst_len;
     unsigned char *dst_buffer = load_file(res_path, &dst_len);

@@ -2,7 +2,7 @@
 #include <string.h>
 #include <sanitize-image.h>
 
-void destroy_image(image_t *im)
+void destroy_image(szim_image_t *im)
 {
     free(im->data);
     free(im->palette);
@@ -10,24 +10,24 @@ void destroy_image(image_t *im)
     free(im);
 }
 
-image_type str_to_type(const char *str)
+szim_image_type str_to_type(const char *str)
 {
     if (strcmp(str, "png") == 0)
     {
-        return TYPE_PNG;
+        return SZIM_TYPE_PNG;
     }
     if (strcmp(str, "jpeg") == 0 || strcmp(str, "jpg") == 0)
     {
-        return TYPE_JPEG;
+        return SZIM_TYPE_JPEG;
     }
     if (strcmp(str, "input") == 0)
     {
-        return TYPE_INPUT;
+        return SZIM_TYPE_INPUT;
     }
-    return TYPE_UNKNOWN;
+    return SZIM_TYPE_UNKNOWN;
 }
 
-int type_to_str(image_type type, char *str, size_t len)
+int type_to_str(szim_image_type type, char *str, size_t len)
 {
     if (len < 8)
     {
@@ -36,16 +36,16 @@ int type_to_str(image_type type, char *str, size_t len)
 
     switch (type)
     {
-    case TYPE_UNKNOWN:
+    case SZIM_TYPE_UNKNOWN:
         strncpy(str, "unknown", 8);
         break;
-    case TYPE_INPUT:
+    case SZIM_TYPE_INPUT:
         strncpy(str, "input", 6);
         break;
-    case TYPE_PNG:
+    case SZIM_TYPE_PNG:
         strncpy(str, "png", 4);
         break;
-    case TYPE_JPEG:
+    case SZIM_TYPE_JPEG:
         strncpy(str, "jpeg", 5);
     default:
         return 1;
@@ -54,7 +54,7 @@ int type_to_str(image_type type, char *str, size_t len)
     return 0;
 }
 
-int type_to_ext(image_type type, char *str, size_t len)
+int type_to_ext(szim_image_type type, char *str, size_t len)
 {
     if (len < 5)
     {
@@ -63,10 +63,10 @@ int type_to_ext(image_type type, char *str, size_t len)
 
     switch (type)
     {
-    case TYPE_PNG:
+    case SZIM_TYPE_PNG:
         strncpy(str, ".png", 5);
         break;
-    case TYPE_JPEG:
+    case SZIM_TYPE_JPEG:
         strncpy(str, ".jpg", 5);
     default:
         return 1;
@@ -75,128 +75,128 @@ int type_to_ext(image_type type, char *str, size_t len)
     return 0;
 }
 
-color_type png_to_color_type(enum spng_color_type color)
+szim_color_type png_to_color_type(enum spng_color_type color)
 {
     switch (color)
     {
     case SPNG_COLOR_TYPE_GRAYSCALE:
-        return COLOR_GRAY;
+        return SZIM_COLOR_GRAY;
     case SPNG_COLOR_TYPE_GRAYSCALE_ALPHA:
-        return COLOR_GRAYA;
+        return SZIM_COLOR_GRAYA;
     case SPNG_COLOR_TYPE_TRUECOLOR:
-        return COLOR_RGB;
+        return SZIM_COLOR_RGB;
     case SPNG_COLOR_TYPE_TRUECOLOR_ALPHA:
-        return COLOR_RGBA;
+        return SZIM_COLOR_RGBA;
     case SPNG_COLOR_TYPE_INDEXED:
-        return COLOR_PALETTE;
+        return SZIM_COLOR_PALETTE;
     default:
-        return COLOR_UNKNOWN;
+        return SZIM_COLOR_UNKNOWN;
     }
 }
 
-enum spng_color_type color_type_to_png(color_type color)
+enum spng_color_type color_type_to_png(szim_color_type color)
 {
     switch (color)
     {
-    case COLOR_GRAY:
+    case SZIM_COLOR_GRAY:
         return SPNG_COLOR_TYPE_GRAYSCALE;
-    case COLOR_GRAYA:
+    case SZIM_COLOR_GRAYA:
         return SPNG_COLOR_TYPE_GRAYSCALE_ALPHA;
-    case COLOR_RGB:
+    case SZIM_COLOR_RGB:
         return SPNG_COLOR_TYPE_TRUECOLOR;
-    case COLOR_RGBA:
+    case SZIM_COLOR_RGBA:
         return SPNG_COLOR_TYPE_TRUECOLOR_ALPHA;
-    case COLOR_PALETTE:
+    case SZIM_COLOR_PALETTE:
         return SPNG_COLOR_TYPE_INDEXED;
     default:
         return SPNG_COLOR_TYPE_TRUECOLOR;
     }
 }
 
-const char *color_type_to_str(color_type color)
+const char *color_type_to_str(szim_color_type color)
 {
     switch (color)
     {
-    case COLOR_GRAY:
+    case SZIM_COLOR_GRAY:
         return "gray";
-    case COLOR_GRAYA:
+    case SZIM_COLOR_GRAYA:
         return "graya";
-    case COLOR_RGB:
+    case SZIM_COLOR_RGB:
         return "rgb";
-    case COLOR_RGBA:
+    case SZIM_COLOR_RGBA:
         return "rgba";
-    case COLOR_PALETTE:
+    case SZIM_COLOR_PALETTE:
         return "palette";
     default:
         return "unknown";
     }
 }
 
-color_type str_to_color_type(const char *str)
+szim_color_type str_to_color_type(const char *str)
 {
     if (strcmp(str, "gray") == 0)
     {
-        return COLOR_GRAY;
+        return SZIM_COLOR_GRAY;
     }
     else if (strcmp(str, "graya") == 0)
     {
-        return COLOR_GRAYA;
+        return SZIM_COLOR_GRAYA;
     }
     else if (strcmp(str, "rgb") == 0)
     {
-        return COLOR_RGB;
+        return SZIM_COLOR_RGB;
     }
     else if (strcmp(str, "rgba") == 0)
     {
-        return COLOR_RGBA;
+        return SZIM_COLOR_RGBA;
     }
     else if (strcmp(str, "palette") == 0)
     {
-        return COLOR_PALETTE;
+        return SZIM_COLOR_PALETTE;
     }
-    return COLOR_UNKNOWN;
+    return SZIM_COLOR_UNKNOWN;
 }
 
-int color_type_to_channels(color_type color)
+int color_type_to_channels(szim_color_type color)
 {
     switch (color)
     {
-    case COLOR_GRAY:
+    case SZIM_COLOR_GRAY:
         return 1;
-    case COLOR_GRAYA:
+    case SZIM_COLOR_GRAYA:
         return 2;
-    case COLOR_RGB:
+    case SZIM_COLOR_RGB:
         return 3;
-    case COLOR_RGBA:
+    case SZIM_COLOR_RGBA:
         return 4;
-    case COLOR_PALETTE:
+    case SZIM_COLOR_PALETTE:
         return 1;
     }
 }
 
-options_t default_options()
+szim_options_t szim_default_options()
 {
-    options_t options = {
-        {{TYPE_PNG, TYPE_JPEG}, 1024, 1024, 1024 * 1024 * 3},
-        {RANDOMIZER_AUTO},
-        {RESIZER_NONE, 512, 512},
-        {TYPE_INPUT,
-         {COLOR_INPUT, 9, SPNG_FILTER_CHOICE_ALL, false},
+    szim_options_t options = {
+        {{SZIM_TYPE_PNG, SZIM_TYPE_JPEG}, 1024, 1024, 1024 * 1024 * 3},
+        {SZIM_RANDOMIZER_AUTO},
+        {SZIM_RESIZER_NONE, 512, 512},
+        {SZIM_TYPE_INPUT,
+         {SZIM_COLOR_INPUT, 9, SPNG_FILTER_CHOICE_ALL, false},
          {90, false, JDCT_DEFAULT, true, 0, false}}};
     return options;
 }
 
-void im_shallow_copy(image_t *src, image_t *dst)
+void im_shallow_copy(szim_image_t *src, szim_image_t *dst)
 {
-    memcpy(dst, src, sizeof(image_t));
+    memcpy(dst, src, sizeof(szim_image_t));
     dst->data = NULL;
     dst->palette = NULL;
     dst->trns = NULL;
 }
 
-void im_deep_copy(image_t *src, image_t *dst)
+void im_deep_copy(szim_image_t *src, szim_image_t *dst)
 {
-    memcpy(dst, src, sizeof(image_t));
+    memcpy(dst, src, sizeof(szim_image_t));
     dst->data = malloc(src->width * src->height * src->channels);
     memcpy(dst->data, src->data, src->width * src->height * src->channels);
 
@@ -221,13 +221,13 @@ void im_deep_copy(image_t *src, image_t *dst)
     }
 }
 
-void debug_options(options_t options)
+void debug_options(szim_options_t options)
 {
     printf("input:\n");
     printf("\tallowed_inputs: [");
     for (int i = 0; i < 8; i++)
     {
-        if (options.input.allowed_types[i] == TYPE_UNKNOWN)
+        if (options.input.allowed_types[i] == SZIM_TYPE_UNKNOWN)
         {
             printf("]\n");
             break;
@@ -266,7 +266,7 @@ void debug_options(options_t options)
     printf("\n");
 }
 
-void debug_image(image_t *im)
+void debug_image(szim_image_t *im)
 {
     printf("image:\n");
 

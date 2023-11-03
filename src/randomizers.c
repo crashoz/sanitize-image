@@ -1,7 +1,7 @@
 #include <sanitize-image.h>
 #include <inttypes.h>
 
-int randomize_channels(image_t *image)
+int randomize_channels(szim_image_t *image)
 {
     for (uint64_t i = 0; i < image->width * image->height * image->channels; i++)
     {
@@ -24,7 +24,7 @@ int randomize_channels(image_t *image)
     return SUCCESS;
 }
 
-int randomize_channels_keep_trns(image_t *image)
+int randomize_channels_keep_trns(szim_image_t *image)
 {
     for (uint64_t i = 0; i < image->width * image->height; i++)
     {
@@ -64,7 +64,7 @@ int randomize_channels_keep_trns(image_t *image)
     return SUCCESS;
 }
 
-int randomize_palette(image_t *image)
+int randomize_palette(szim_image_t *image)
 {
     unsigned char mapping[image->palette_len];
 
@@ -82,7 +82,7 @@ int randomize_palette(image_t *image)
     unsigned char *mapped_palette = malloc(image->palette_len * 3);
     if (mapped_palette == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < image->palette_len; i++)

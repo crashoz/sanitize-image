@@ -28,11 +28,11 @@ int main(int argc, char **argv)
 
     fclose(f);
 
-    options_t options = default_options();
-    options.randomizer.type = RANDOMIZER_NONE;
-    options.output.type = TYPE_JPEG;
+    szim_options_t options = szim_default_options();
+    options.randomizer.type = SZIM_RANDOMIZER_NONE;
+    options.output.type = SZIM_TYPE_JPEG;
     char res_path[4096];
-    int ret = sanitize(buffer, n, TYPE_UNKNOWN, "../../tmp/new", options, res_path, 4096);
+    int ret = szim_sanitize(buffer, n, SZIM_TYPE_UNKNOWN, "../../tmp/new", options, res_path, 4096);
 
     if (ret != 0)
     {

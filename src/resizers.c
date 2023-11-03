@@ -4,23 +4,23 @@
 #define FACTOR 2048
 #define SHIFT 11
 
-int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, resizer_type type)
+int resize(szim_image_t *src, szim_image_t **dst_ptr, uint32_t width, uint32_t height, szim_resizer_type type)
 {
-    if (type == RESIZER_NONE)
+    if (type == SZIM_RESIZER_NONE)
     {
         *dst_ptr = src;
         return 0;
     }
 
-    if (type == RESIZER_AUTO)
+    if (type == SZIM_RESIZER_AUTO)
     {
         if (src->palette != NULL)
         {
-            type = RESIZER_NN;
+            type = SZIM_RESIZER_NN;
         }
         else
         {
-            type = RESIZER_BILINEAR;
+            type = SZIM_RESIZER_BILINEAR;
         }
     }
 
@@ -42,10 +42,10 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
 
     switch (type)
     {
-    case RESIZER_NN:
+    case SZIM_RESIZER_NN:
         nn_interp(src, dst_ptr, width, height);
         break;
-    case RESIZER_BILINEAR:
+    case SZIM_RESIZER_BILINEAR:
         bilinear_interp(src, dst_ptr, width, height);
         break;
     default:
@@ -55,12 +55,12 @@ int resize(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height, res
     return 0;
 }
 
-int nn_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
+int nn_interp(szim_image_t *src, szim_image_t **dst_ptr, uint32_t width, uint32_t height)
 {
-    image_t *dst = malloc(sizeof(image_t));
+    szim_image_t *dst = malloc(sizeof(szim_image_t));
     if (dst == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     im_shallow_copy(src, dst);
@@ -70,7 +70,7 @@ int nn_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
     dst->data = malloc(width * height * src->channels);
     if (dst->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     const int row_stride = src->width * src->channels;
@@ -105,17 +105,17 @@ int nn_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
     return 0;
 }
 
-int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t height)
+int bilinear_interp(szim_image_t *src, szim_image_t **dst_ptr, uint32_t width, uint32_t height)
 {
     // TODO handle palette and trns
     int y, sy, y0, fracy;
     int x, sx, x0, fracx;
     int offset;
 
-    image_t *dst = malloc(sizeof(image_t));
+    szim_image_t *dst = malloc(sizeof(szim_image_t));
     if (dst == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     im_shallow_copy(src, dst);
@@ -125,7 +125,7 @@ int bilinear_interp(image_t *src, image_t **dst_ptr, uint32_t width, uint32_t he
     dst->data = malloc(width * height * src->channels);
     if (dst->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     const int row_stride = src->width * src->channels;

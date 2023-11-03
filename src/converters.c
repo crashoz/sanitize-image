@@ -23,45 +23,45 @@ convert_fn convert_map[5][5];
 
 void init_convert_map()
 {
-    convert_map[COLOR_GRAY][COLOR_GRAY] = &identity;
-    convert_map[COLOR_GRAY][COLOR_GRAYA] = &gray_to_graya;
-    convert_map[COLOR_GRAY][COLOR_RGB] = &gray_to_rgb;
-    convert_map[COLOR_GRAY][COLOR_RGBA] = &gray_to_rgba;
-    convert_map[COLOR_GRAY][COLOR_PALETTE] = &gray_to_palette;
+    convert_map[SZIM_COLOR_GRAY][SZIM_COLOR_GRAY] = &identity;
+    convert_map[SZIM_COLOR_GRAY][SZIM_COLOR_GRAYA] = &gray_to_graya;
+    convert_map[SZIM_COLOR_GRAY][SZIM_COLOR_RGB] = &gray_to_rgb;
+    convert_map[SZIM_COLOR_GRAY][SZIM_COLOR_RGBA] = &gray_to_rgba;
+    convert_map[SZIM_COLOR_GRAY][SZIM_COLOR_PALETTE] = &gray_to_palette;
 
-    convert_map[COLOR_GRAYA][COLOR_GRAY] = &graya_to_gray;
-    convert_map[COLOR_GRAYA][COLOR_GRAYA] = &identity;
-    convert_map[COLOR_GRAYA][COLOR_RGB] = &graya_to_rgb;
-    convert_map[COLOR_GRAYA][COLOR_RGBA] = &graya_to_rgba;
-    convert_map[COLOR_GRAYA][COLOR_PALETTE] = &graya_to_palette;
+    convert_map[SZIM_COLOR_GRAYA][SZIM_COLOR_GRAY] = &graya_to_gray;
+    convert_map[SZIM_COLOR_GRAYA][SZIM_COLOR_GRAYA] = &identity;
+    convert_map[SZIM_COLOR_GRAYA][SZIM_COLOR_RGB] = &graya_to_rgb;
+    convert_map[SZIM_COLOR_GRAYA][SZIM_COLOR_RGBA] = &graya_to_rgba;
+    convert_map[SZIM_COLOR_GRAYA][SZIM_COLOR_PALETTE] = &graya_to_palette;
 
-    convert_map[COLOR_RGB][COLOR_GRAY] = &rgb_to_gray;
-    convert_map[COLOR_RGB][COLOR_GRAYA] = &rgb_to_graya;
-    convert_map[COLOR_RGB][COLOR_RGB] = &identity;
-    convert_map[COLOR_RGB][COLOR_RGBA] = &rgb_to_rgba;
-    convert_map[COLOR_RGB][COLOR_PALETTE] = &rgb_to_palette;
+    convert_map[SZIM_COLOR_RGB][SZIM_COLOR_GRAY] = &rgb_to_gray;
+    convert_map[SZIM_COLOR_RGB][SZIM_COLOR_GRAYA] = &rgb_to_graya;
+    convert_map[SZIM_COLOR_RGB][SZIM_COLOR_RGB] = &identity;
+    convert_map[SZIM_COLOR_RGB][SZIM_COLOR_RGBA] = &rgb_to_rgba;
+    convert_map[SZIM_COLOR_RGB][SZIM_COLOR_PALETTE] = &rgb_to_palette;
 
-    convert_map[COLOR_RGBA][COLOR_GRAY] = &rgba_to_gray;
-    convert_map[COLOR_RGBA][COLOR_GRAYA] = &rgba_to_graya;
-    convert_map[COLOR_RGBA][COLOR_RGB] = &rgba_to_rgb;
-    convert_map[COLOR_RGBA][COLOR_RGBA] = &identity;
-    convert_map[COLOR_RGBA][COLOR_PALETTE] = &rgba_to_palette;
+    convert_map[SZIM_COLOR_RGBA][SZIM_COLOR_GRAY] = &rgba_to_gray;
+    convert_map[SZIM_COLOR_RGBA][SZIM_COLOR_GRAYA] = &rgba_to_graya;
+    convert_map[SZIM_COLOR_RGBA][SZIM_COLOR_RGB] = &rgba_to_rgb;
+    convert_map[SZIM_COLOR_RGBA][SZIM_COLOR_RGBA] = &identity;
+    convert_map[SZIM_COLOR_RGBA][SZIM_COLOR_PALETTE] = &rgba_to_palette;
 
-    convert_map[COLOR_PALETTE][COLOR_GRAY] = &palette_to_gray;
-    convert_map[COLOR_PALETTE][COLOR_GRAYA] = &palette_to_graya;
-    convert_map[COLOR_PALETTE][COLOR_RGB] = &palette_to_rgb;
-    convert_map[COLOR_PALETTE][COLOR_RGBA] = &palette_to_rgba;
-    convert_map[COLOR_PALETTE][COLOR_PALETTE] = &identity;
+    convert_map[SZIM_COLOR_PALETTE][SZIM_COLOR_GRAY] = &palette_to_gray;
+    convert_map[SZIM_COLOR_PALETTE][SZIM_COLOR_GRAYA] = &palette_to_graya;
+    convert_map[SZIM_COLOR_PALETTE][SZIM_COLOR_RGB] = &palette_to_rgb;
+    convert_map[SZIM_COLOR_PALETTE][SZIM_COLOR_RGBA] = &palette_to_rgba;
+    convert_map[SZIM_COLOR_PALETTE][SZIM_COLOR_PALETTE] = &identity;
 }
 
 // TODO test all
 
-int identity(image_t *src, image_t **dst)
+int identity(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     im_deep_copy(src, im);
@@ -70,15 +70,15 @@ int identity(image_t *src, image_t **dst)
 
 /* GRAY */
 
-int gray_to_graya(image_t *src, image_t **dst)
+int gray_to_graya(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAYA;
+    im->color = SZIM_COLOR_GRAYA;
     im->bit_depth = 8;
     im->channels = 2;
     im->width = src->width;
@@ -92,7 +92,7 @@ int gray_to_graya(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns_len == 0)
@@ -126,15 +126,15 @@ int gray_to_graya(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int gray_to_rgb(image_t *src, image_t **dst)
+int gray_to_rgb(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGB;
+    im->color = SZIM_COLOR_RGB;
     im->bit_depth = 8;
     im->channels = 3;
     im->width = src->width;
@@ -148,7 +148,7 @@ int gray_to_rgb(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -164,15 +164,15 @@ int gray_to_rgb(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int gray_to_rgba(image_t *src, image_t **dst)
+int gray_to_rgba(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGBA;
+    im->color = SZIM_COLOR_RGBA;
     im->bit_depth = 8;
     im->channels = 4;
     im->width = src->width;
@@ -186,7 +186,7 @@ int gray_to_rgba(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns_len == 0)
@@ -224,10 +224,10 @@ int gray_to_rgba(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int gray_to_palette(image_t *src, image_t **dst)
+int gray_to_palette(szim_image_t *src, szim_image_t **dst)
 {
     int ret;
-    image_t *im_rgb;
+    szim_image_t *im_rgb;
 
     ret = gray_to_rgb(src, &im_rgb);
     if (ret != 0)
@@ -242,15 +242,15 @@ int gray_to_palette(image_t *src, image_t **dst)
 
 /* GRAYA */
 
-int graya_to_gray(image_t *src, image_t **dst)
+int graya_to_gray(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAY;
+    im->color = SZIM_COLOR_GRAY;
     im->bit_depth = 8;
     im->channels = 1;
     im->width = src->width;
@@ -264,7 +264,7 @@ int graya_to_gray(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -278,15 +278,15 @@ int graya_to_gray(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int graya_to_rgb(image_t *src, image_t **dst)
+int graya_to_rgb(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGB;
+    im->color = SZIM_COLOR_RGB;
     im->bit_depth = 8;
     im->channels = 3;
     im->width = src->width;
@@ -300,7 +300,7 @@ int graya_to_rgb(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -316,15 +316,15 @@ int graya_to_rgb(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int graya_to_rgba(image_t *src, image_t **dst)
+int graya_to_rgba(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGBA;
+    im->color = SZIM_COLOR_RGBA;
     im->bit_depth = 8;
     im->channels = 4;
     im->width = src->width;
@@ -338,7 +338,7 @@ int graya_to_rgba(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -354,10 +354,10 @@ int graya_to_rgba(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int graya_to_palette(image_t *src, image_t **dst)
+int graya_to_palette(szim_image_t *src, szim_image_t **dst)
 {
     int ret;
-    image_t *im_rgb;
+    szim_image_t *im_rgb;
 
     ret = graya_to_rgb(src, &im_rgb);
     if (ret != 0)
@@ -372,15 +372,15 @@ int graya_to_palette(image_t *src, image_t **dst)
 
 /* RGB */
 
-int rgb_to_gray(image_t *src, image_t **dst)
+int rgb_to_gray(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAY;
+    im->color = SZIM_COLOR_GRAY;
     im->bit_depth = 8;
     im->channels = 1;
     im->width = src->width;
@@ -394,7 +394,7 @@ int rgb_to_gray(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -408,15 +408,15 @@ int rgb_to_gray(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int rgb_to_graya(image_t *src, image_t **dst)
+int rgb_to_graya(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAYA;
+    im->color = SZIM_COLOR_GRAYA;
     im->bit_depth = 8;
     im->channels = 2;
     im->width = src->width;
@@ -430,7 +430,7 @@ int rgb_to_graya(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -445,15 +445,15 @@ int rgb_to_graya(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int rgb_to_rgba(image_t *src, image_t **dst)
+int rgb_to_rgba(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGBA;
+    im->color = SZIM_COLOR_RGBA;
     im->bit_depth = 8;
     im->channels = 4;
     im->width = src->width;
@@ -467,7 +467,7 @@ int rgb_to_rgba(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns_len == 0)
@@ -507,14 +507,14 @@ int rgb_to_rgba(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int rgb_to_palette(image_t *src, image_t **dst)
+int rgb_to_palette(szim_image_t *src, szim_image_t **dst)
 {
     int ret;
     int n_colors = 255;
     octree_node_t *octree = octree_create_node();
     if (octree == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (uint32_t i = 0; i < src->width * src->height; i++)
@@ -529,7 +529,7 @@ int rgb_to_palette(image_t *src, image_t **dst)
     heap_t *heap = octree_to_heap(octree);
     if (heap == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     octree_reduce(heap, n_colors);
@@ -537,13 +537,13 @@ int rgb_to_palette(image_t *src, image_t **dst)
     unsigned char *indexed_data = malloc(src->width * src->height);
     if (indexed_data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     unsigned char *palette = malloc(n_colors * 3);
     if (palette == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     int plte_len;
@@ -555,13 +555,13 @@ int rgb_to_palette(image_t *src, image_t **dst)
         return ret;
     }
 
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_PALETTE;
+    im->color = SZIM_COLOR_PALETTE;
     im->bit_depth = 8;
     im->channels = 1;
     im->width = src->width;
@@ -581,15 +581,15 @@ int rgb_to_palette(image_t *src, image_t **dst)
 
 /* RGBA */
 
-int rgba_to_gray(image_t *src, image_t **dst)
+int rgba_to_gray(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAY;
+    im->color = SZIM_COLOR_GRAY;
     im->bit_depth = 8;
     im->channels = 1;
     im->width = src->width;
@@ -603,7 +603,7 @@ int rgba_to_gray(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -619,15 +619,15 @@ int rgba_to_gray(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int rgba_to_graya(image_t *src, image_t **dst)
+int rgba_to_graya(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAYA;
+    im->color = SZIM_COLOR_GRAYA;
     im->bit_depth = 8;
     im->channels = 2;
     im->width = src->width;
@@ -641,7 +641,7 @@ int rgba_to_graya(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -655,15 +655,15 @@ int rgba_to_graya(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int rgba_to_rgb(image_t *src, image_t **dst)
+int rgba_to_rgb(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGB;
+    im->color = SZIM_COLOR_RGB;
     im->bit_depth = 8;
     im->channels = 3;
     im->width = src->width;
@@ -677,7 +677,7 @@ int rgba_to_rgb(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     for (int i = 0; i < src->width * src->height; i++)
@@ -692,10 +692,10 @@ int rgba_to_rgb(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int rgba_to_palette(image_t *src, image_t **dst)
+int rgba_to_palette(szim_image_t *src, szim_image_t **dst)
 {
     int ret;
-    image_t *im_rgb;
+    szim_image_t *im_rgb;
 
     ret = rgba_to_rgb(src, &im_rgb);
     if (ret != 0)
@@ -710,15 +710,15 @@ int rgba_to_palette(image_t *src, image_t **dst)
 
 /* PALETTE */
 
-int palette_to_gray(image_t *src, image_t **dst)
+int palette_to_gray(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAY;
+    im->color = SZIM_COLOR_GRAY;
     im->bit_depth = 8;
     im->channels = 1;
     im->width = src->width;
@@ -732,7 +732,7 @@ int palette_to_gray(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns == 0)
@@ -761,15 +761,15 @@ int palette_to_gray(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int palette_to_graya(image_t *src, image_t **dst)
+int palette_to_graya(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_GRAYA;
+    im->color = SZIM_COLOR_GRAYA;
     im->bit_depth = 8;
     im->channels = 2;
     im->width = src->width;
@@ -783,7 +783,7 @@ int palette_to_graya(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns_len == 0)
@@ -814,15 +814,15 @@ int palette_to_graya(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int palette_to_rgb(image_t *src, image_t **dst)
+int palette_to_rgb(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGB;
+    im->color = SZIM_COLOR_RGB;
     im->bit_depth = 8;
     im->channels = 3;
     im->width = src->width;
@@ -836,7 +836,7 @@ int palette_to_rgb(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns == 0)
@@ -863,15 +863,15 @@ int palette_to_rgb(image_t *src, image_t **dst)
     return SUCCESS;
 }
 
-int palette_to_rgba(image_t *src, image_t **dst)
+int palette_to_rgba(szim_image_t *src, szim_image_t **dst)
 {
-    image_t *im = malloc(sizeof(image_t));
+    szim_image_t *im = malloc(sizeof(szim_image_t));
     if (im == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
-    im->color = COLOR_RGBA;
+    im->color = SZIM_COLOR_RGBA;
     im->bit_depth = 8;
     im->channels = 4;
     im->width = src->width;
@@ -885,7 +885,7 @@ int palette_to_rgba(image_t *src, image_t **dst)
     im->data = malloc(src->width * src->height * im->channels);
     if (im->data == NULL)
     {
-        return ERROR_OUT_OF_MEMORY;
+        return SZIM_ERROR_OUT_OF_MEMORY;
     }
 
     if (src->trns == 0)

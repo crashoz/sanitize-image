@@ -6,27 +6,27 @@
 
 #define MAX_PATH_LEN 4096
 
-int sanitize(unsigned char *data, size_t size, image_type input_type, const char *path, options_t options, char *res_path, size_t res_path_len)
+int szim_sanitize(unsigned char *data, size_t size, szim_image_type input_type, const char *path, szim_options_t options, char *res_path, size_t res_path_len)
 {
     int ret, errorcode;
-    image_t *im = NULL;
+    szim_image_t *im = NULL;
 
     // debug_options(options);
 
     // Guess image type with the magic header
-    if (input_type == TYPE_UNKNOWN)
+    if (input_type == SZIM_TYPE_UNKNOWN)
     {
         if (is_png(data, size))
         {
-            input_type = TYPE_PNG;
+            input_type = SZIM_TYPE_PNG;
         }
         else if (is_jpeg(data, size))
         {
-            input_type = TYPE_JPEG;
+            input_type = SZIM_TYPE_JPEG;
         }
         else
         {
-            return ERROR_UNKNOWN_IMAGE_TYPE;
+            return SZIM_ERROR_UNKNOWN_IMAGE_TYPE;
         }
     }
 
@@ -42,11 +42,11 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     if (i >= 8)
     {
-        return ERROR_NOT_ALLOWED_TYPE;
+        return SZIM_ERROR_NOT_ALLOWED_TYPE;
     }
 
     // Set output type
-    if (options.output.type == TYPE_INPUT)
+    if (options.output.type == SZIM_TYPE_INPUT)
     {
         options.output.type = input_type;
     }
@@ -54,16 +54,16 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     // Decode to internal format
     switch (input_type)
     {
-    case TYPE_PNG:
+    case SZIM_TYPE_PNG:
         ret = png_decode(data, size, options.input.max_width, options.input.max_height, options.input.max_size, &im);
         break;
 
-    case TYPE_JPEG:
+    case SZIM_TYPE_JPEG:
         ret = jpeg_decode(data, size, options.input.max_width, options.input.max_height, options.input.max_size, &im);
         break;
 
     default:
-        return ERROR_UNKNOWN_IMAGE_TYPE;
+        return SZIM_ERROR_UNKNOWN_IMAGE_TYPE;
     }
 
     if (ret != 0)
@@ -81,10 +81,10 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     ret = 0;
     switch (options.randomizer.type)
     {
-    case RANDOMIZER_NONE:
+    case SZIM_RANDOMIZER_NONE:
         break;
-    case RANDOMIZER_AUTO:
-        if (im->color == COLOR_PALETTE)
+    case SZIM_RANDOMIZER_AUTO:
+        if (im->color == SZIM_COLOR_PALETTE)
         {
             ret = randomize_palette(im);
         }
@@ -111,7 +111,7 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     }
 
     // Resize image
-    image_t *resized_im;
+    szim_image_t *resized_im;
     resize(im, &resized_im, options.resizer.width, options.resizer.height, options.resizer.type);
     if (im != resized_im)
     {
@@ -120,11 +120,11 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
     }
 
     // Convert
-    color_type output_color;
+    szim_color_type output_color;
     switch (options.output.type)
     {
-    case TYPE_PNG:
-        if (options.output.png.color_type == TYPE_INPUT)
+    case SZIM_TYPE_PNG:
+        if (options.output.png.color_type == SZIM_TYPE_INPUT)
         {
             output_color = im->color;
         }
@@ -134,17 +134,17 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
         }
         break;
 
-    case TYPE_JPEG:
-        output_color = COLOR_RGB;
+    case SZIM_TYPE_JPEG:
+        output_color = SZIM_COLOR_RGB;
         break;
     default:
-        return ERROR_NOT_SUPPORTED;
+        return SZIM_ERROR_NOT_SUPPORTED;
     }
 
     if (im->color != output_color)
     {
         // printf("convert %s -> %s\n", color_type_to_str(im->color), color_type_to_str(output_color));
-        image_t *converted_im;
+        szim_image_t *converted_im;
         ret = convert_map[im->color][output_color](im, &converted_im);
         if (ret != 0)
         {
@@ -173,10 +173,10 @@ int sanitize(unsigned char *data, size_t size, image_type input_type, const char
 
     switch (options.output.type)
     {
-    case TYPE_PNG:
+    case SZIM_TYPE_PNG:
         png_encode(full_path, im, options.output.png);
         break;
-    case TYPE_JPEG:
+    case SZIM_TYPE_JPEG:
         jpeg_encode(full_path, im, options.output.jpeg);
         break;
     default:

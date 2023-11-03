@@ -9,7 +9,7 @@
 
 #include <sanitize-image.h>
 
-int png_encode(const char *path, image_t *image, output_png_options_t options)
+int png_encode(const char *path, szim_image_t *image, szim_output_png_options_t options)
 {
     int errorcode = 0;
     int fmt;
@@ -23,7 +23,7 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
     if (png == NULL)
     {
         printf("error opening output file %s\n", path);
-        errorcode = ERROR_OPENING_FILE;
+        errorcode = SZIM_ERROR_OPENING_FILE;
         goto error;
     }
 
@@ -33,14 +33,14 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
     if (ctx == NULL)
     {
         printf("spng_ctx_new() failed\n");
-        errorcode = ERROR_INTERNAL;
+        errorcode = SZIM_ERROR_INTERNAL;
         goto error;
     }
 
     /* Alternatively you can set an output FILE* or stream with spng_set_png_file() or spng_set_png_stream() */
     if (spng_set_png_file(ctx, png) != 0)
     {
-        errorcode = ERROR_SET_DEST;
+        errorcode = SZIM_ERROR_SET_DEST;
         goto error;
     }
 
@@ -59,14 +59,14 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
     if (ret != 0)
     {
         printf("spng_set_ihdr() error: %s\n", spng_strerror(ret));
-        errorcode = ERROR_INTERNAL;
+        errorcode = SZIM_ERROR_INTERNAL;
         goto error;
     }
 
     spng_set_option(ctx, SPNG_IMG_COMPRESSION_LEVEL, options.compression_level);
     spng_set_option(ctx, SPNG_FILTER_CHOICE, options.filter);
 
-    if (image->color == COLOR_PALETTE)
+    if (image->color == SZIM_COLOR_PALETTE)
     {
         struct spng_plte plte;
         plte.n_entries = image->palette_len;
@@ -81,7 +81,7 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
         if (ret != 0)
         {
             printf("spng_set_plte() error: %s\n", spng_strerror(ret));
-            errorcode = ERROR_ENCODE;
+            errorcode = SZIM_ERROR_ENCODE;
             goto error;
         }
     }
@@ -92,15 +92,15 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
 
         switch (image->color)
         {
-        case COLOR_GRAY:
+        case SZIM_COLOR_GRAY:
             trns.gray = *(uint16_t *)(image->trns);
             break;
-        case COLOR_RGB:
+        case SZIM_COLOR_RGB:
             trns.red = *(uint16_t *)(image->trns);
             trns.green = *((uint16_t *)(image->trns) + 1);
             trns.blue = *((uint16_t *)(image->trns) + 2);
             break;
-        case COLOR_PALETTE:
+        case SZIM_COLOR_PALETTE:
             trns.n_type3_entries = image->trns_len;
             memcpy(trns.type3_alpha, image->trns, image->trns_len);
             break;
@@ -110,7 +110,7 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
         if (ret != 0)
         {
             printf("spng_set_trns() error: %s\n", spng_strerror(ret));
-            errorcode = ERROR_ENCODE;
+            errorcode = SZIM_ERROR_ENCODE;
             goto error;
         }
     }
@@ -125,7 +125,7 @@ int png_encode(const char *path, image_t *image, output_png_options_t options)
     if (ret != 0)
     {
         printf("spng_encode_image() error: %s\n", spng_strerror(ret));
-        errorcode = ERROR_ENCODE;
+        errorcode = SZIM_ERROR_ENCODE;
         goto error;
     }
 
@@ -179,7 +179,7 @@ void custom_enc_error_exit(j_common_ptr cinfo)
     longjmp(err->setjmp_buffer, 1);
 }
 
-int jpeg_encode(const char *path, image_t *image, output_jpeg_options_t options)
+int jpeg_encode(const char *path, szim_image_t *image, szim_output_jpeg_options_t options)
 {
     int errorcode;
     /* This struct contains the JPEG compression parameters and pointers to
@@ -210,7 +210,7 @@ int jpeg_encode(const char *path, image_t *image, output_jpeg_options_t options)
     if ((outfile = fopen(path, "wb")) == NULL)
     {
         fprintf(stderr, "can't open %s\n", path);
-        errorcode = ERROR_OPENING_FILE;
+        errorcode = SZIM_ERROR_OPENING_FILE;
         goto error;
     }
 
@@ -234,13 +234,13 @@ int jpeg_encode(const char *path, image_t *image, output_jpeg_options_t options)
         switch (jerr.pub.msg_code)
         {
         case JERR_FILE_READ:
-            errorcode = ERROR_SET_SOURCE;
+            errorcode = SZIM_ERROR_SET_SOURCE;
             break;
         case JERR_OUT_OF_MEMORY:
-            errorcode = ERROR_OUT_OF_MEMORY;
+            errorcode = SZIM_ERROR_OUT_OF_MEMORY;
             break;
         default:
-            errorcode = ERROR_INTERNAL;
+            errorcode = SZIM_ERROR_INTERNAL;
             break;
         }
 

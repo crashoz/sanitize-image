@@ -14,4 +14,4 @@ extern const int type_list_len;
 
 int copy_file(const char *in_path, const char *out_path);
 unsigned char *load_file(const char *path, size_t *len);
-int test_snapshot(const char *src, const char *snp, options_t options);
+int test_snapshot(const char *src, const char *snp, szim_options_t options);
